@@ -349,10 +349,9 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
     if (!offscreenCanvasRef.current) offscreenCanvasRef.current = document.createElement('canvas');
   }, []);
 
-  // ★★★ ここからログ追加 ★★★
   useEffect(() => {
     const gl = glRef.current;
-    console.log('[SlideRenderer TexLoadEffect] Triggered. GL context available:', !!gl, 'GL context lost:', gl ? gl.isContextLost() : 'N/A');
+    console.log('[SlideRenderer TexLoadEffect] Triggered. GL context available:', !!gl, 'GL context lost:', gl ? gl.isContextLost() : 'N/A', 'Canvas W/H:', canvasWidth, canvasHeight);
 
     if (!gl || gl.isContextLost()) {
         console.log('[SlideRenderer TexLoadEffect] GL context not available or lost. Aborting texture load.');
@@ -415,7 +414,6 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       }
     });
 
-    // Cleanup unused textures
     Object.keys(loadedUserTexturesRef.current).forEach(loadedTextureId => {
       if (!currentTextureIdsInSlideData.has(loadedTextureId)) {
         console.log(`[SlideRenderer TexLoadEffect] Cleaning up unused texture ID: ${loadedTextureId}`);
@@ -427,8 +425,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       }
     });
     console.log('[SlideRenderer TexLoadEffect] Finished processing textures for this effect run.');
-  }, [slideData?.uploadedTextures, glRef, onShaderError, t]);
-  // ★★★ ここまでログ追加 ★★★
+  }, [slideData?.uploadedTextures, glRef, onShaderError, t, canvasWidth, canvasHeight]); // ★★★ canvasWidth, canvasHeight を依存配列に追加 ★★★
 
   useEffect(() => {
     return () => {
@@ -440,7 +437,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
         console.log('[SlideRenderer CleanupEffect] All user textures deleted.');
       }
     };
-  }, [glRef]); // glRefを追加
+  }, [glRef]);
 
   const setupGL = useCallback(() => {
     const canvas = canvasRef.current;
@@ -457,7 +454,11 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       gl = canvas.getContext('webgl', { preserveDrawingBuffer: false, antialias: true, premultipliedAlpha: false });
       if (!gl) { onShaderError({ key: 'webglNotSupported' }); return false; }
       glRef.current = gl;
+      console.log('[SlideRenderer setupGL] WebGL context CREATED and set to glRef.current');
+    } else {
+      console.log('[SlideRenderer setupGL] WebGL context already available.');
     }
+
     if (!buffersRef.current.quadBuffer) {
       const quadVertices = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
       const buffer = gl.createBuffer();
@@ -482,9 +483,10 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       const fbInfo = createFramebufferWithTexture(gl, actualWidth, actualHeight, sceneTexture);
       if (!fbInfo) { onShaderError({ key: 'framebufferCreateFailed', params: { width: actualWidth, height: actualHeight } }); return false; }
       framebufferInfoRef.current = {...fbInfo, width: actualWidth, height: actualHeight};
+      console.log('[SlideRenderer setupGL] Framebuffer created/resized.');
     }
     return true;
-  }, [canvasWidth, canvasHeight, onShaderError, t]); // t を依存配列に追加
+  }, [canvasWidth, canvasHeight, onShaderError, t]);
 
   const compileShaders = useCallback(() => {
     const gl = glRef.current;
@@ -524,7 +526,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
     programsRef.current = newPrograms;
     if (allCompiled) onShaderError(null);
     return allCompiled;
-  }, [slideData, onShaderError, t]); // t を依存配列に追加
+  }, [slideData, onShaderError, t]);
 
   const updateTextTexture = useCallback((gl, element, displayScale) => {
     if (!offscreenCanvasRef.current || element.width <= 0 || element.height <= 0) return null;
@@ -644,8 +646,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
           const baseColor = Array.isArray(element.baseColor) && element.baseColor.length === 4 ? element.baseColor : hexToRgba(element.baseColor || '#FFFFFF', 1.0);
           gl.uniform4fv(elProgInfo.uniforms.u_base_color, baseColor);
 
-          // ★★★ ここで loadedUserTexturesRef.current の状態を確認 ★★★
-          if (element.id === selectedElementId || !selectedElementId) { // ログが多すぎないように選択中要素か、何も選択されてない場合のみ
+          if (element.id === selectedElementId || !selectedElementId) {
              console.log(`[RenderScene GLSL Shape ${element.id}] Texture Bindings:`, JSON.stringify(element.textureBindings));
              console.log(`[RenderScene GLSL Shape ${element.id}] loadedUserTexturesRef.current keys:`, JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
           }
@@ -656,7 +657,6 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
             const textureId = element.textureBindings?.[uniformName];
             const glTexture = textureId ? loadedUserTexturesRef.current[textureId] : null;
 
-            // ★★★ 各テクスチャのバインド状態をログ出力 ★★★
             if (element.id === selectedElementId || !selectedElementId) {
                 console.log(`[RenderScene GLSL Shape ${element.id}]   - ${uniformName}: textureId='${textureId}', glTexture available: ${!!glTexture}`);
             }
@@ -666,7 +666,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
               gl.bindTexture(gl.TEXTURE_2D, glTexture);
               gl.uniform1i(elProgInfo.uniforms[uniformName], i);
               if (elProgInfo.uniforms[boundUniformName]) {
-                gl.uniform1i(elProgInfo.uniforms[boundUniformName], 1); // true
+                gl.uniform1i(elProgInfo.uniforms[boundUniformName], 1); 
                  if (element.id === selectedElementId || !selectedElementId) console.log(`[RenderScene GLSL Shape ${element.id}]     Set ${boundUniformName} to TRUE (1)`);
               }
             } else {
@@ -674,7 +674,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
               gl.bindTexture(gl.TEXTURE_2D, null);
               if (elProgInfo.uniforms[uniformName]) gl.uniform1i(elProgInfo.uniforms[uniformName], i);
               if (elProgInfo.uniforms[boundUniformName]) {
-                gl.uniform1i(elProgInfo.uniforms[boundUniformName], 0); // false
+                gl.uniform1i(elProgInfo.uniforms[boundUniformName], 0); 
                 if (element.id === selectedElementId || !selectedElementId) console.log(`[RenderScene GLSL Shape ${element.id}]     Set ${boundUniformName} to FALSE (0) because glTexture for '${textureId}' was not found.`);
               }
             }
@@ -734,7 +734,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       animationFrameIdRef.current = null; return;
     }
     animationFrameIdRef.current = requestAnimationFrame(renderScene);
-  }, [slideData, canvasWidth, canvasHeight, onShaderError, programsRef, updateTextTexture, loadedUserTexturesRef, selectedElementId, isSlideshowMode, designSlideWidth, designSlideHeight, t, dprRef.current]); // t を依存配列に追加
+  }, [slideData, canvasWidth, canvasHeight, onShaderError, programsRef, updateTextTexture, loadedUserTexturesRef, selectedElementId, isSlideshowMode, designSlideWidth, designSlideHeight, t, dprRef.current]);
 
   useEffect(() => {
     if (canvasWidth > 0 && canvasHeight > 0 && slideData) {
@@ -1321,7 +1321,6 @@ const App = () => {
 
   const currentSlide = slides[currentPageIndex];
 
-  // ★★★ App コンポーネントの currentSlide 監視ログ ★★★
   useEffect(() => {
     if (currentSlide) {
       console.log('[App currentSlideEffect] currentSlide.uploadedTextures:', JSON.stringify(currentSlide.uploadedTextures, null, 2));
