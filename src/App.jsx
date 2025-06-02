@@ -14,9 +14,9 @@ const translations = {
     nextPage: "次へ",
     pageIndicator: "ページ {currentPage}/{totalPages}",
     addNewPage: "新しいページを追加",
-    deletePageButton: "現在のページを削除", // New
-    confirmDeletePageMessage: "現在のページを削除してもよろしいですか？この操作は元に戻せません。", // New
-    cannotDeleteLastPageMessage: "最後のページは削除できません。", // New
+    deletePageButton: "現在のページを削除",
+    confirmDeletePageMessage: "現在のページを削除してもよろしいですか？この操作は元に戻せません。",
+    cannotDeleteLastPageMessage: "最後のページは削除できません。",
     addTextElement: "テキスト要素を追加",
     addGlslElement: "GLSL図形要素を追加",
     pageTexturesTitle: "ページテクスチャ (最大3枚)",
@@ -63,8 +63,8 @@ const translations = {
     defaultExportFilename: "glsl_slides_data.json",
     copiedElementNotification: "要素をコピーしました。",
     pastedElementNotification: "要素をペーストしました。",
-    undoNotification: "操作を取り消しました。", // New
-    nothingToUndoNotification: "取り消す操作がありません。", // New
+    undoNotification: "操作を取り消しました。",
+    nothingToUndoNotification: "取り消す操作がありません。",
   },
   EN: {
     glslSlides: "GLSL Slides",
@@ -75,9 +75,9 @@ const translations = {
     nextPage: "Next",
     pageIndicator: "Page {currentPage}/{totalPages}",
     addNewPage: "Add New Page",
-    deletePageButton: "Delete Current Page", // New
-    confirmDeletePageMessage: "Are you sure you want to delete the current page? This action cannot be undone.", // New
-    cannotDeleteLastPageMessage: "Cannot delete the last page.", // New
+    deletePageButton: "Delete Current Page",
+    confirmDeletePageMessage: "Are you sure you want to delete the current page? This action cannot be undone.",
+    cannotDeleteLastPageMessage: "Cannot delete the last page.",
     addTextElement: "Add Text Element",
     addGlslElement: "Add GLSL Shape Element",
     pageTexturesTitle: "Page Textures (Max 3)",
@@ -124,13 +124,13 @@ const translations = {
     defaultExportFilename: "glsl_slides_data.json",
     copiedElementNotification: "Element copied.",
     pastedElementNotification: "Element pasted.",
-    undoNotification: "Operation undone.", // New
-    nothingToUndoNotification: "Nothing to undo.", // New
+    undoNotification: "Operation undone.",
+    nothingToUndoNotification: "Nothing to undo.",
   }
 };
 
-// --- Default Shaders (No changes) ---
-const DEFAULT_VERTEX_SHADER = 
+// --- Default Shaders ---
+const DEFAULT_VERTEX_SHADER =
 `attribute vec4 a_position;
 varying vec2 v_texCoord;
 void main() {
@@ -139,34 +139,34 @@ void main() {
 }
 `;
 
-const DEFAULT_ELEMENT_VERTEX_SHADER = 
-`attribute vec2 a_element_uv_position; 
+const DEFAULT_ELEMENT_VERTEX_SHADER =
+`attribute vec2 a_element_uv_position;
 uniform vec2 u_canvas_resolution;
-uniform vec2 u_element_position_px; 
-uniform vec2 u_element_size_px;     
+uniform vec2 u_element_position_px;
+uniform vec2 u_element_size_px;
 varying vec2 v_element_uv;
 void main() {
 	vec2 vertex_pos_px = u_element_position_px + a_element_uv_position * u_element_size_px;
 	vec2 clip_space_pos = (vertex_pos_px / u_canvas_resolution) * 2.0 - 1.0;
-    clip_space_pos.y *= -1.0; 
+    clip_space_pos.y *= -1.0;
     gl_Position = vec4(clip_space_pos, 0.0, 1.0);
     v_element_uv = a_element_uv_position;
 }
 `;
 
-const DEFAULT_BACKGROUND_FS = 
+const DEFAULT_BACKGROUND_FS =
 `precision mediump float;
-uniform vec2 u_resolution; 
-uniform float u_time; 
-varying vec2 v_texCoord; 
+uniform vec2 u_resolution;
+uniform float u_time;
+varying vec2 v_texCoord;
 void main() {
 	gl_FragColor = vec4(0.9, 0.9, 0.9, 1.0);
 }
 `;
 
-const DEFAULT_ELEMENT_MATERIAL_FS = 
+const DEFAULT_ELEMENT_MATERIAL_FS =
 `precision mediump float;
-uniform vec2 u_element_resolution_px; 
+uniform vec2 u_element_resolution_px;
 uniform float u_time;
 uniform vec4 u_base_color;
 
@@ -178,7 +178,7 @@ uniform bool u_userTexture0_bound;
 uniform bool u_userTexture1_bound;
 uniform bool u_userTexture2_bound;
 
-varying vec2 v_element_uv; 
+varying vec2 v_element_uv;
 
 void main() {
 	if (u_userTexture0_bound) {
@@ -187,13 +187,13 @@ void main() {
     	vec3 finalColor = u_base_color.rgb;
     	float finalAlpha = u_base_color.a;
     	vec3 gradient = vec3(v_element_uv.x, v_element_uv.y, 0.5 + 0.5 * cos(u_time * 0.8 + v_element_uv.x * 3.14159));
-    	finalColor *= gradient; 
+    	finalColor *= gradient;
     	gl_FragColor = vec4(finalColor, finalAlpha);
     }
 }
 `;
 
-const DEFAULT_POST_PROCESS_FS = 
+const DEFAULT_POST_PROCESS_FS =
 `precision mediump float;
 uniform sampler2D u_sceneTexture;
 uniform vec2 u_resolution;
@@ -206,7 +206,7 @@ void main() {
 }
 `;
 
-const DEFAULT_TEXT_ELEMENT_FS = 
+const DEFAULT_TEXT_ELEMENT_FS =
 `precision mediump float;
 uniform sampler2D u_elementTexture;
 varying vec2 v_element_uv;
@@ -216,7 +216,7 @@ void main() {
 }
 `;
 
-// --- WebGL Helper Functions (No changes) ---
+// --- WebGL Helper Functions ---
 function createShader(gl, type, source) {
   const shader = gl.createShader(type);
   gl.shaderSource(shader, source);
@@ -282,17 +282,17 @@ function createFramebufferWithTexture(gl, width, height, texture) {
     return { framebuffer: fb, texture: texture };
 }
 
-// --- Text Drawing Helper (Updated to include fontFamily) ---
+// --- Text Drawing Helper ---
 function drawWrappedText(ctx, text, x, y, maxWidth, maxHeight, fontFamily = 'Arial, sans-serif', fontSize, color, textAlign, lineHeightMultiplier = 1.2, dpr = 1) {
     if (!text || text.trim() === "") return;
-    const scaledFontSize = fontSize * dpr; 
-    const padding = x * dpr; 
-    const logicalMaxWidth = maxWidth * dpr - (padding * 2); 
-    const logicalMaxHeight = maxHeight * dpr - (padding * 2); 
+    const scaledFontSize = fontSize * dpr;
+    const padding = x * dpr;
+    const logicalMaxWidth = maxWidth * dpr - (padding * 2);
+    const logicalMaxHeight = maxHeight * dpr - (padding * 2);
 
-    ctx.font = `${scaledFontSize}px ${fontFamily}`; // Apply fontFamily
+    ctx.font = `${scaledFontSize}px ${fontFamily}`;
     ctx.fillStyle = color;
-    ctx.textBaseline = 'top'; 
+    ctx.textBaseline = 'top';
     ctx.imageSmoothingEnabled = true;
 
     const lines = [];
@@ -315,78 +315,132 @@ function drawWrappedText(ctx, text, x, y, maxWidth, maxHeight, fontFamily = 'Ari
     }
 
     const lineHeight = scaledFontSize * lineHeightMultiplier;
-    let startY = padding; 
+    let startY = padding;
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        if (startY + lineHeight > maxHeight * dpr - padding && i < lines.length) break; 
-        
+        if (startY + lineHeight > maxHeight * dpr - padding && i < lines.length) break;
+
         let drawX;
         const lineWidth = ctx.measureText(line).width;
         if (textAlign === 'center') drawX = padding + (logicalMaxWidth - lineWidth) / 2;
         else if (textAlign === 'right') drawX = padding + logicalMaxWidth - lineWidth;
-        else drawX = padding; 
+        else drawX = padding;
 
         ctx.fillText(line, drawX, startY);
         startY += lineHeight;
     }
 }
 
-const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, selectedElementId, isSlideshowMode, designSlideWidth, designSlideHeight, t }) => { 
+const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, selectedElementId, isSlideshowMode, designSlideWidth, designSlideHeight, t }) => {
   const canvasRef = useRef(null);
   const glRef = useRef(null);
   const programsRef = useRef({ backgroundProgram: null, postProcessProgram: null, elementPrograms: {}, textElementProgram: null });
-  const buffersRef = useRef({}); 
+  const buffersRef = useRef({});
   const framebufferInfoRef = useRef(null);
   const animationFrameIdRef = useRef(null);
-  const textTexturesRef = useRef({}); 
-  const offscreenCanvasRef = useRef(null); 
+  const textTexturesRef = useRef({});
+  const offscreenCanvasRef = useRef(null);
   const dprRef = useRef(1);
-  const loadedUserTexturesRef = useRef({}); 
+  const loadedUserTexturesRef = useRef({});
 
   useEffect(() => {
     dprRef.current = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
     if (!offscreenCanvasRef.current) offscreenCanvasRef.current = document.createElement('canvas');
   }, []);
 
+  // ★★★ ここからログ追加 ★★★
   useEffect(() => {
     const gl = glRef.current;
-    if (!gl || gl.isContextLost() || !slideData || !slideData.uploadedTextures) return;
-    const currentTextureIds = new Set(slideData.uploadedTextures.map(texture => texture.id));
-    
-    slideData.uploadedTextures.forEach(texData => {
+    console.log('[SlideRenderer TexLoadEffect] Triggered. GL context available:', !!gl, 'GL context lost:', gl ? gl.isContextLost() : 'N/A');
+
+    if (!gl || gl.isContextLost()) {
+        console.log('[SlideRenderer TexLoadEffect] GL context not available or lost. Aborting texture load.');
+        return;
+    }
+    if (!slideData) {
+        console.log('[SlideRenderer TexLoadEffect] slideData is not available. Aborting texture load.');
+        return;
+    }
+    if (!slideData.uploadedTextures) {
+        console.log('[SlideRenderer TexLoadEffect] slideData.uploadedTextures is not available. Aborting texture load.');
+        return;
+    }
+    console.log('[SlideRenderer TexLoadEffect] slideData.uploadedTextures (raw):', JSON.stringify(slideData.uploadedTextures));
+    console.log(`[SlideRenderer TexLoadEffect] Number of textures in slideData: ${slideData.uploadedTextures.length}`);
+    console.log('[SlideRenderer TexLoadEffect] Current loadedUserTexturesRef.current (before processing):', JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
+
+
+    const currentTextureIdsInSlideData = new Set(slideData.uploadedTextures.map(texture => texture.id));
+    console.log('[SlideRenderer TexLoadEffect] Texture IDs in current slideData:', Array.from(currentTextureIdsInSlideData));
+
+    slideData.uploadedTextures.forEach((texData, index) => {
+      console.log(`[SlideRenderer TexLoadEffect] Processing texture ${index + 1}/${slideData.uploadedTextures.length}: ID: ${texData.id}, Name: ${texData.name}`);
+      const hasDataUrl = !!texData.dataUrl;
+      const dataUrlLength = texData.dataUrl ? texData.dataUrl.length : 'N/A';
+      const isAlreadyLoaded = !!loadedUserTexturesRef.current[texData.id];
+      console.log(`[SlideRenderer TexLoadEffect]   - Has dataUrl: ${hasDataUrl}, DataUrl length: ${dataUrlLength}, Already loaded: ${isAlreadyLoaded}`);
+
       if (texData.dataUrl && !loadedUserTexturesRef.current[texData.id]) {
+        console.log(`[SlideRenderer TexLoadEffect]   -> Attempting to load texture ID: ${texData.id}`);
         const image = new Image();
         image.onload = () => {
-          if (gl.isContextLost()) { return; }
-          const glTexture = createAndSetupTexture(gl);
-          gl.bindTexture(gl.TEXTURE_2D, glTexture);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-          gl.bindTexture(gl.TEXTURE_2D, null);
-          loadedUserTexturesRef.current[texData.id] = glTexture;
+          console.log(`[SlideRenderer TexLoadEffect]   ---> Image.onload SUCCESS for texture ID: ${texData.id}, Name: ${texData.name}`);
+          if (gl.isContextLost()) {
+            console.error(`[SlideRenderer TexLoadEffect]   -----> GL context LOST before creating texture for ID: ${texData.id}`);
+            return;
+          }
+          try {
+            const glTexture = createAndSetupTexture(gl);
+            gl.bindTexture(gl.TEXTURE_2D, glTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            loadedUserTexturesRef.current[texData.id] = glTexture;
+            console.log(`[SlideRenderer TexLoadEffect]   -----> WebGL texture CREATED and STORED for ID: ${texData.id}. loadedUserTexturesRef now:`, JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
+          } catch (e) {
+            console.error(`[SlideRenderer TexLoadEffect]   -----> ERROR creating WebGL texture for ID: ${texData.id}:`, e);
+            onShaderError({ key: 'imageLoadError', params: { fileName: `WebGL texture creation error for ${texData.name}` } });
+          }
         };
-        image.onerror = () => { onShaderError({ key: 'imageLoadError', params: { fileName: texData.name } }); }
+        image.onerror = (e) => {
+          console.error(`[SlideRenderer TexLoadEffect]   ---> Image.onerror FAILED for texture ID: ${texData.id}, Name: ${texData.name}`, e);
+          onShaderError({ key: 'imageLoadError', params: { fileName: texData.name } });
+        }
+        console.log(`[SlideRenderer TexLoadEffect]   -> Setting image.src for texture ID: ${texData.id}. First 100 chars of dataUrl: ${texData.dataUrl ? texData.dataUrl.substring(0, 100) + "..." : "N/A"}`);
         image.src = texData.dataUrl;
+      } else if (!texData.dataUrl) {
+        console.warn(`[SlideRenderer TexLoadEffect]   -> SKIPPING texture ID: ${texData.id} - No dataUrl provided.`);
+      } else if (loadedUserTexturesRef.current[texData.id]) {
+        console.log(`[SlideRenderer TexLoadEffect]   -> SKIPPING texture ID: ${texData.id} - Already loaded.`);
       }
     });
 
+    // Cleanup unused textures
     Object.keys(loadedUserTexturesRef.current).forEach(loadedTextureId => {
-      if (!currentTextureIds.has(loadedTextureId)) {
-        gl.deleteTexture(loadedUserTexturesRef.current[loadedTextureId]);
+      if (!currentTextureIdsInSlideData.has(loadedTextureId)) {
+        console.log(`[SlideRenderer TexLoadEffect] Cleaning up unused texture ID: ${loadedTextureId}`);
+        if (!gl.isContextLost()) {
+          gl.deleteTexture(loadedUserTexturesRef.current[loadedTextureId]);
+        }
         delete loadedUserTexturesRef.current[loadedTextureId];
+        console.log(`[SlideRenderer TexLoadEffect]   -> Deleted. loadedUserTexturesRef now:`, JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
       }
     });
-  }, [slideData?.uploadedTextures, glRef, onShaderError, t]); 
+    console.log('[SlideRenderer TexLoadEffect] Finished processing textures for this effect run.');
+  }, [slideData?.uploadedTextures, glRef, onShaderError, t]);
+  // ★★★ ここまでログ追加 ★★★
 
   useEffect(() => {
     return () => {
       const gl = glRef.current;
       if (gl && !gl.isContextLost()) {
+        console.log('[SlideRenderer CleanupEffect] Component unmounting. Deleting all loaded user textures.');
         Object.values(loadedUserTexturesRef.current).forEach(glTexture => gl.deleteTexture(glTexture));
         loadedUserTexturesRef.current = {};
+        console.log('[SlideRenderer CleanupEffect] All user textures deleted.');
       }
     };
-  }, [glRef]);
+  }, [glRef]); // glRefを追加
 
   const setupGL = useCallback(() => {
     const canvas = canvasRef.current;
@@ -397,7 +451,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
 
     if (actualWidth <= 0 || actualHeight <= 0) { onShaderError({ key: 'invalidCanvasDimensions', params: { width: actualWidth, height: actualHeight } }); return false; }
     canvas.width = actualWidth; canvas.height = actualHeight;
-    
+
     let gl = glRef.current;
     if (!gl || gl.isContextLost()) {
       gl = canvas.getContext('webgl', { preserveDrawingBuffer: false, antialias: true, premultipliedAlpha: false });
@@ -430,7 +484,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       framebufferInfoRef.current = {...fbInfo, width: actualWidth, height: actualHeight};
     }
     return true;
-  }, [canvasWidth, canvasHeight, onShaderError, t]); 
+  }, [canvasWidth, canvasHeight, onShaderError, t]); // t を依存配列に追加
 
   const compileShaders = useCallback(() => {
     const gl = glRef.current;
@@ -461,19 +515,18 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
     slideData.elements.forEach(el => {
       if (el.type === 'glsl_shape' && el.materialShader?.fs) {
         const elUniforms = ['u_canvas_resolution', 'u_element_position_px', 'u_element_size_px', 'u_element_resolution_px', 'u_time', 'u_base_color',
-                              'u_userTexture0', 'u_userTexture1', 'u_userTexture2', 
+                              'u_userTexture0', 'u_userTexture1', 'u_userTexture2',
                               'u_userTexture0_bound', 'u_userTexture1_bound', 'u_userTexture2_bound'];
         const elProg = compileAndStore(DEFAULT_ELEMENT_VERTEX_SHADER, el.materialShader.fs, ['a_element_uv_position'], elUniforms, `Element ${el.id}`);
         if (elProg) newPrograms.elementPrograms[el.id] = elProg;
       }
     });
-    programsRef.current = newPrograms; 
-    if (allCompiled) onShaderError(null); // Clear error if all compiled
+    programsRef.current = newPrograms;
+    if (allCompiled) onShaderError(null);
     return allCompiled;
-  }, [slideData, onShaderError, t]);
+  }, [slideData, onShaderError, t]); // t を依存配列に追加
 
-  // --- updateTextTexture (Updated to use fontFamily from element) ---
-  const updateTextTexture = useCallback((gl, element, displayScale) => { 
+  const updateTextTexture = useCallback((gl, element, displayScale) => {
     if (!offscreenCanvasRef.current || element.width <= 0 || element.height <= 0) return null;
     const dpr = dprRef.current;
     const scaledDesignWidth = element.width * displayScale;
@@ -484,31 +537,31 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
     const textureHeight = Math.max(1, Math.floor(scaledDesignHeight * dpr));
 
     const canvas = offscreenCanvasRef.current;
-    if (canvas.width !== textureWidth || canvas.height !== textureHeight) { 
-        canvas.width = textureWidth; 
-        canvas.height = textureHeight; 
+    if (canvas.width !== textureWidth || canvas.height !== textureHeight) {
+        canvas.width = textureWidth;
+        canvas.height = textureHeight;
     }
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height); 
-    const { fontFamily = 'Arial, sans-serif', color = '#FFFFFF', textAlign = 'left', text } = element; // Use element.fontFamily
-    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const { fontFamily = 'Arial, sans-serif', color = '#FFFFFF', textAlign = 'left', text } = element;
+
     drawWrappedText(ctx, text, 5, 5, scaledDesignWidth, scaledDesignHeight, fontFamily, scaledDesignFontSize, color, textAlign, 1.2, dpr);
-    
-    let texInfo = textTexturesRef.current[element.id + (isSlideshowMode ? '_slideshow' : '')]; 
+
+    let texInfo = textTexturesRef.current[element.id + (isSlideshowMode ? '_slideshow' : '')];
     const hash = JSON.stringify({text, width:scaledDesignWidth, height:scaledDesignHeight, fontSize: scaledDesignFontSize, fontFamily, color, textAlign, dpr});
 
     if (!texInfo || texInfo.width !== textureWidth || texInfo.height !== textureHeight || texInfo.dataHash !== hash) {
-      if (texInfo) gl.deleteTexture(texInfo.texture); 
+      if (texInfo) gl.deleteTexture(texInfo.texture);
       const newTex = createAndSetupTexture(gl);
       textTexturesRef.current[element.id + (isSlideshowMode ? '_slideshow' : '')] = { texture: newTex, width: textureWidth, height: textureHeight, dataHash: hash };
       texInfo = textTexturesRef.current[element.id + (isSlideshowMode ? '_slideshow' : '')];
     }
     gl.bindTexture(gl.TEXTURE_2D, texInfo.texture);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); 
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
     gl.bindTexture(gl.TEXTURE_2D, null);
     return texInfo.texture;
-  }, [isSlideshowMode]); 
+  }, [isSlideshowMode]);
 
   const renderScene = useCallback((currentTime) => {
     const gl = glRef.current;
@@ -516,33 +569,33 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null; return;
     }
-    
+
     const actualCanvasWidth_dpr = framebufferInfoRef.current.width;
     const actualCanvasHeight_dpr = framebufferInfoRef.current.height;
 
     if (actualCanvasWidth_dpr <= 0 || actualCanvasHeight_dpr <= 0) { animationFrameIdRef.current = requestAnimationFrame(renderScene); return; }
-    const timeSeconds = currentTime * 0.001; 
+    const timeSeconds = currentTime * 0.001;
 
     let contentScale = 1;
     let contentOffsetX_logical = 0;
     let contentOffsetY_logical = 0;
 
     if (designSlideWidth > 0 && designSlideHeight > 0) {
-        const scaleToFitX = canvasWidth / designSlideWidth;   
-        const scaleToFitY = canvasHeight / designSlideHeight; 
+        const scaleToFitX = canvasWidth / designSlideWidth;
+        const scaleToFitY = canvasHeight / designSlideHeight;
         contentScale = Math.min(scaleToFitX, scaleToFitY);
 
         const scaledContentWidth_logical = designSlideWidth * contentScale;
         const scaledContentHeight_logical = designSlideHeight * contentScale;
 
-        contentOffsetX_logical = (canvasWidth - scaledContentWidth_logical) / 2; 
-        contentOffsetY_logical = (canvasHeight - scaledContentHeight_logical) / 2; 
+        contentOffsetX_logical = (canvasWidth - scaledContentWidth_logical) / 2;
+        contentOffsetY_logical = (canvasHeight - scaledContentHeight_logical) / 2;
     }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebufferInfoRef.current.framebuffer);
     gl.viewport(0, 0, actualCanvasWidth_dpr, actualCanvasHeight_dpr);
-    gl.clearColor(0.0, 0.0, 0.0, 0.0); 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); 
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     const bgProgInfo = programsRef.current.backgroundProgram;
     if (bgProgInfo?.program) {
@@ -555,8 +608,8 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
-    gl.enable(gl.BLEND); 
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     slideData.elements.forEach(element => {
       const designX = element.x;
@@ -568,7 +621,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       const finalElemY_logical = contentOffsetY_logical + (designY * contentScale);
       const finalElemWidth_logical = designWidth * contentScale;
       const finalElemHeight_logical = designHeight * contentScale;
-      
+
       const elemX_dpr = finalElemX_logical * dprRef.current;
       const elemY_dpr = finalElemY_logical * dprRef.current;
       const elemWidth_dpr = finalElemWidth_logical * dprRef.current;
@@ -581,42 +634,61 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
           gl.bindBuffer(gl.ARRAY_BUFFER, buffersRef.current.elementQuadUVBuffer);
           gl.enableVertexAttribArray(elProgInfo.attributes.a_element_uv_position);
           gl.vertexAttribPointer(elProgInfo.attributes.a_element_uv_position, 2, gl.FLOAT, false, 0, 0);
-          
+
           gl.uniform2f(elProgInfo.uniforms.u_canvas_resolution, actualCanvasWidth_dpr, actualCanvasHeight_dpr);
           gl.uniform2f(elProgInfo.uniforms.u_element_position_px, elemX_dpr, elemY_dpr);
           gl.uniform2f(elProgInfo.uniforms.u_element_size_px, elemWidth_dpr, elemHeight_dpr);
-          gl.uniform2f(elProgInfo.uniforms.u_element_resolution_px, elemWidth_dpr, elemHeight_dpr); 
-          
+          gl.uniform2f(elProgInfo.uniforms.u_element_resolution_px, elemWidth_dpr, elemHeight_dpr);
+
           gl.uniform1f(elProgInfo.uniforms.u_time, timeSeconds);
-          const baseColor = Array.isArray(element.baseColor) && element.baseColor.length === 4 ? element.baseColor : hexToRgba(element.baseColor || '#FFFFFF', 1.0); 
+          const baseColor = Array.isArray(element.baseColor) && element.baseColor.length === 4 ? element.baseColor : hexToRgba(element.baseColor || '#FFFFFF', 1.0);
           gl.uniform4fv(elProgInfo.uniforms.u_base_color, baseColor);
+
+          // ★★★ ここで loadedUserTexturesRef.current の状態を確認 ★★★
+          if (element.id === selectedElementId || !selectedElementId) { // ログが多すぎないように選択中要素か、何も選択されてない場合のみ
+             console.log(`[RenderScene GLSL Shape ${element.id}] Texture Bindings:`, JSON.stringify(element.textureBindings));
+             console.log(`[RenderScene GLSL Shape ${element.id}] loadedUserTexturesRef.current keys:`, JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
+          }
+
           for (let i = 0; i < 3; i++) {
             const uniformName = `u_userTexture${i}`;
             const boundUniformName = `${uniformName}_bound`;
             const textureId = element.textureBindings?.[uniformName];
             const glTexture = textureId ? loadedUserTexturesRef.current[textureId] : null;
+
+            // ★★★ 各テクスチャのバインド状態をログ出力 ★★★
+            if (element.id === selectedElementId || !selectedElementId) {
+                console.log(`[RenderScene GLSL Shape ${element.id}]   - ${uniformName}: textureId='${textureId}', glTexture available: ${!!glTexture}`);
+            }
+
             if (glTexture && elProgInfo.uniforms[uniformName]) {
-              gl.activeTexture(gl.TEXTURE0 + i); 
+              gl.activeTexture(gl.TEXTURE0 + i);
               gl.bindTexture(gl.TEXTURE_2D, glTexture);
               gl.uniform1i(elProgInfo.uniforms[uniformName], i);
-              if (elProgInfo.uniforms[boundUniformName]) gl.uniform1i(elProgInfo.uniforms[boundUniformName], 1); 
+              if (elProgInfo.uniforms[boundUniformName]) {
+                gl.uniform1i(elProgInfo.uniforms[boundUniformName], 1); // true
+                 if (element.id === selectedElementId || !selectedElementId) console.log(`[RenderScene GLSL Shape ${element.id}]     Set ${boundUniformName} to TRUE (1)`);
+              }
             } else {
               gl.activeTexture(gl.TEXTURE0 + i);
-              gl.bindTexture(gl.TEXTURE_2D, null); 
-              if (elProgInfo.uniforms[uniformName]) gl.uniform1i(elProgInfo.uniforms[uniformName], i); 
-              if (elProgInfo.uniforms[boundUniformName]) gl.uniform1i(elProgInfo.uniforms[boundUniformName], 0); 
+              gl.bindTexture(gl.TEXTURE_2D, null);
+              if (elProgInfo.uniforms[uniformName]) gl.uniform1i(elProgInfo.uniforms[uniformName], i);
+              if (elProgInfo.uniforms[boundUniformName]) {
+                gl.uniform1i(elProgInfo.uniforms[boundUniformName], 0); // false
+                if (element.id === selectedElementId || !selectedElementId) console.log(`[RenderScene GLSL Shape ${element.id}]     Set ${boundUniformName} to FALSE (0) because glTexture for '${textureId}' was not found.`);
+              }
             }
           }
           gl.drawArrays(gl.TRIANGLES, 0, 6);
         }
-      } else if (element.type === 'text') { 
-        if (!isSlideshowMode && element.id === selectedElementId) { 
-            return; 
+      } else if (element.type === 'text') {
+        if (!isSlideshowMode && element.id === selectedElementId) {
+            return;
         }
-        
+
         const textProgInfo = programsRef.current.textElementProgram;
         if (textProgInfo?.program && element.text?.trim() !== "") {
-          const textTexture = updateTextTexture(gl, element, contentScale); 
+          const textTexture = updateTextTexture(gl, element, contentScale);
           if (textTexture) {
             gl.useProgram(textProgInfo.program);
             gl.bindBuffer(gl.ARRAY_BUFFER, buffersRef.current.elementQuadUVBuffer);
@@ -626,8 +698,8 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
             gl.uniform2f(textProgInfo.uniforms.u_canvas_resolution, actualCanvasWidth_dpr, actualCanvasHeight_dpr);
             gl.uniform2f(textProgInfo.uniforms.u_element_position_px, elemX_dpr, elemY_dpr);
             gl.uniform2f(textProgInfo.uniforms.u_element_size_px, elemWidth_dpr, elemHeight_dpr);
-            
-            gl.activeTexture(gl.TEXTURE0); 
+
+            gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, textTexture);
             gl.uniform1i(textProgInfo.uniforms.u_elementTexture, 0);
             gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -637,21 +709,21 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
     });
     gl.disable(gl.BLEND);
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null); 
-    gl.viewport(0, 0, actualCanvasWidth_dpr, actualCanvasHeight_dpr); 
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, actualCanvasWidth_dpr, actualCanvasHeight_dpr);
     const ppProgInfo = programsRef.current.postProcessProgram;
     if (ppProgInfo?.program) {
       gl.useProgram(ppProgInfo.program);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, framebufferInfoRef.current.texture);
       gl.uniform1i(ppProgInfo.uniforms.u_sceneTexture, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, buffersRef.current.quadBuffer); 
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffersRef.current.quadBuffer);
       gl.enableVertexAttribArray(ppProgInfo.attributes.a_position);
       gl.vertexAttribPointer(ppProgInfo.attributes.a_position, 2, gl.FLOAT, false, 0, 0);
       gl.uniform2f(ppProgInfo.uniforms.u_resolution, actualCanvasWidth_dpr, actualCanvasHeight_dpr);
       gl.uniform1f(ppProgInfo.uniforms.u_time, timeSeconds);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
-    } else { 
+    } else {
       gl.clearColor(0.1,0.1,0.1,1); gl.clear(gl.COLOR_BUFFER_BIT);
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, null); gl.bindTexture(gl.TEXTURE_2D, null);
@@ -662,7 +734,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       animationFrameIdRef.current = null; return;
     }
     animationFrameIdRef.current = requestAnimationFrame(renderScene);
-  }, [slideData, canvasWidth, canvasHeight, onShaderError, programsRef, updateTextTexture, loadedUserTexturesRef, selectedElementId, isSlideshowMode, designSlideWidth, designSlideHeight, t, dprRef.current]); 
+  }, [slideData, canvasWidth, canvasHeight, onShaderError, programsRef, updateTextTexture, loadedUserTexturesRef, selectedElementId, isSlideshowMode, designSlideWidth, designSlideHeight, t, dprRef.current]); // t を依存配列に追加
 
   useEffect(() => {
     if (canvasWidth > 0 && canvasHeight > 0 && slideData) {
@@ -671,27 +743,27 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
         if (setupGL()) glIsSetup = true;
         else { if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current); animationFrameIdRef.current = null; return; }
       } else glIsSetup = true;
-      
+
       if (glIsSetup) {
-        if (compileShaders()) { 
+        if (compileShaders()) {
           if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
-          animationFrameIdRef.current = requestAnimationFrame(renderScene); 
+          animationFrameIdRef.current = requestAnimationFrame(renderScene);
         } else { if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current); animationFrameIdRef.current = null; }
       }
     } else { if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current); animationFrameIdRef.current = null; }
     return () => { if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current); animationFrameIdRef.current = null; };
-  }, [canvasWidth, canvasHeight, slideData, setupGL, compileShaders, renderScene, dprRef]); 
+  }, [canvasWidth, canvasHeight, slideData, setupGL, compileShaders, renderScene, dprRef]);
 
   useEffect(() => {
-    const gl = glRef.current; if (!gl || gl.isContextLost()) return; 
+    const gl = glRef.current; if (!gl || gl.isContextLost()) return;
     const currentElementIds = new Set(slideData.elements.map(el => el.id));
     Object.keys(textTexturesRef.current).forEach(id => {
-      if (!currentElementIds.has(id.replace('_slideshow',''))) { 
-        gl.deleteTexture(textTexturesRef.current[id].texture); 
-        delete textTexturesRef.current[id]; 
+      if (!currentElementIds.has(id.replace('_slideshow',''))) {
+        gl.deleteTexture(textTexturesRef.current[id].texture);
+        delete textTexturesRef.current[id];
       }
     });
-    return () => { 
+    return () => {
         if (gl && !gl.isContextLost()) {
             Object.values(textTexturesRef.current).forEach(ti => gl.deleteTexture(ti.texture));
             textTexturesRef.current = {};
@@ -716,11 +788,11 @@ const DraggableResizableElement = ({ children, data, onUpdate, onSelect, isSelec
       } else if (typeof window !== 'undefined') {
           setParentBoundsInternal({ left: 0, top: 0, width: window.innerWidth, height: window.innerHeight });
       }
-    }, [slideBounds, data.width, data.height, displayScale]); 
+    }, [slideBounds, data.width, data.height, displayScale]);
 
     const handleMouseDownDrag = (e) => {
-        if (e.button !== 0) return; 
-        if (e.target.closest('textarea, input, .CodeMirror, select, button')) { 
+        if (e.button !== 0) return;
+        if (e.target.closest('textarea, input, .CodeMirror, select, button')) {
             if (elementType === "text" && isSelected && e.target.tagName === "TEXTAREA") {} else return;
         }
         e.stopPropagation(); onSelect(data.id); setIsDragging(true);
@@ -738,7 +810,7 @@ const DraggableResizableElement = ({ children, data, onUpdate, onSelect, isSelec
             let newDesignX = e.clientX / displayScale - dragStartPos.x;
             let newDesignY = e.clientY / displayScale - dragStartPos.y;
 
-            if (slideBounds === "parent" && parentBoundsInternal.width > 0) { 
+            if (slideBounds === "parent" && parentBoundsInternal.width > 0) {
                 const scaledElWidth = data.width * displayScale;
                 const scaledElHeight = data.height * displayScale;
                 let newScaledX = newDesignX * displayScale;
@@ -746,7 +818,7 @@ const DraggableResizableElement = ({ children, data, onUpdate, onSelect, isSelec
 
                 newScaledX = Math.max(0, Math.min(newScaledX, parentBoundsInternal.width - scaledElWidth));
                 newScaledY = Math.max(0, Math.min(newScaledY, parentBoundsInternal.height - scaledElHeight));
-                
+
                 newDesignX = newScaledX / displayScale;
                 newDesignY = newScaledY / displayScale;
             }
@@ -763,8 +835,8 @@ const DraggableResizableElement = ({ children, data, onUpdate, onSelect, isSelec
             let newDesignHeight = Math.max(minHeight, resizeStartSize.height + deltaDesignY);
 
             if (slideBounds === "parent" && parentBoundsInternal.width > 0) {
-                const elDesignX = data.x; 
-                const elDesignY = data.y; 
+                const elDesignX = data.x;
+                const elDesignY = data.y;
 
                 if ((elDesignX + newDesignWidth) * displayScale > parentBoundsInternal.width) {
                     newDesignWidth = (parentBoundsInternal.width / displayScale) - elDesignX;
@@ -778,20 +850,20 @@ const DraggableResizableElement = ({ children, data, onUpdate, onSelect, isSelec
             onUpdate(data.id, { width: newDesignWidth, height: newDesignHeight });
         }
     }, [isDragging, isResizing, dragStartPos, resizeStartSize, data, onUpdate, minWidth, minHeight, parentBoundsInternal, slideBounds, displayScale]);
-    
+
     const handleMouseUp = useCallback(() => { setIsDragging(false); setIsResizing(false); }, []);
 
     useEffect(() => {
-        if (isDragging || isResizing) { 
-            window.addEventListener('mousemove', handleMouseMove); 
-            window.addEventListener('mouseup', handleMouseUp); 
-        } else { 
-            window.removeEventListener('mousemove', handleMouseMove); 
-            window.removeEventListener('mouseup', handleMouseUp); 
+        if (isDragging || isResizing) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        } else {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
         }
-        return () => { 
-            window.removeEventListener('mousemove', handleMouseMove); 
-            window.removeEventListener('mouseup', handleMouseUp); 
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
         };
     }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
 
@@ -801,20 +873,20 @@ const DraggableResizableElement = ({ children, data, onUpdate, onSelect, isSelec
     const scaledHeight = data.height * displayScale;
 
     return (
-        <div ref={elementRef} style={{ 
-                position: 'absolute', 
-                left: `${scaledX}px`, 
-                top: `${scaledY}px`, 
-                width: `${scaledWidth}px`, 
+        <div ref={elementRef} style={{
+                position: 'absolute',
+                left: `${scaledX}px`,
+                top: `${scaledY}px`,
+                width: `${scaledWidth}px`,
                 height: `${scaledHeight}px`,
                 border: isSelected ? (elementType === 'text' ? '2px dashed #00aeff' : '2px dashed #ffae00') : '1px solid transparent',
-                boxSizing: 'border-box', 
-                cursor: isDragging ? 'grabbing' : (elementType === 'text' && isSelected ? 'default' : 'grab'), 
-                zIndex: isSelected ? 11 : 10, 
-                userSelect: 'none', 
+                boxSizing: 'border-box',
+                cursor: isDragging ? 'grabbing' : (elementType === 'text' && isSelected ? 'default' : 'grab'),
+                zIndex: isSelected ? 11 : 10,
+                userSelect: 'none',
             }}
-            onMouseDown={handleMouseDownDrag} 
-            onClick={(e) => { e.stopPropagation(); onSelect(data.id);}} 
+            onMouseDown={handleMouseDownDrag}
+            onClick={(e) => { e.stopPropagation(); onSelect(data.id);}}
         >
             {React.Children.map(children, child => {
                 if (React.isValidElement(child)) {
@@ -823,39 +895,38 @@ const DraggableResizableElement = ({ children, data, onUpdate, onSelect, isSelec
                 return child;
             })}
             {isSelected && (
-            <div style={{ 
-                    position: 'absolute', 
-                    right: -4, 
-                    bottom: -4, 
-                    width: '12px', 
+            <div style={{
+                    position: 'absolute',
+                    right: -4,
+                    bottom: -4,
+                    width: '12px',
                     height: '12px',
-                    background: elementType === 'text' ? '#00aeff' : '#ffae00', 
+                    background: elementType === 'text' ? '#00aeff' : '#ffae00',
                     border: '2px solid #fff',
-                    borderRadius: '2px', 
-                    cursor: 'nwse-resize', 
-                    zIndex: 12 
+                    borderRadius: '2px',
+                    cursor: 'nwse-resize',
+                    zIndex: 12
                 }}
-                onMouseDown={handleMouseDownResize} 
+                onMouseDown={handleMouseDownResize}
             />
             )}
         </div>
     );
 };
 
-// --- TextElement (Updated to include font selection) ---
 const TextElement = ({ data, onUpdate, onSelect, isSelected, slideBounds, displayScale, t }) => {
   const handleChange = (e) => { onUpdate(data.id, { text: e.target.value }); };
-  const handleStyleChange = (property, value) => { 
-      if (property === 'fontSize') { 
+  const handleStyleChange = (property, value) => {
+      if (property === 'fontSize') {
           onUpdate(data.id, { [property]: parseInt(value) });
       } else {
-          onUpdate(data.id, { [property]: value }); 
+          onUpdate(data.id, { [property]: value });
       }
   };
   const textAreaRef = useRef(null);
   useEffect(() => { if (isSelected && textAreaRef.current) requestAnimationFrame(() => textAreaRef.current?.focus()); }, [isSelected]);
-  
-  const displayedFontSize = Math.max(8, (data.fontSize || 16) * displayScale); 
+
+  const displayedFontSize = Math.max(8, (data.fontSize || 16) * displayScale);
   const designFontSize = data.fontSize || 16;
   const currentFontFamily = data.fontFamily || 'Arial, sans-serif';
 
@@ -869,51 +940,51 @@ const TextElement = ({ data, onUpdate, onSelect, isSelected, slideBounds, displa
     'Garamond, serif',
     'Courier New, monospace',
     'Brush Script MT, cursive',
-    'Comic Sans MS, cursive', 
+    'Comic Sans MS, cursive',
     'Impact, fantasy',
     'Luminari, fantasy',
     'Helvetica Neue, sans-serif',
-    'Roboto, sans-serif', 
-    'Open Sans, sans-serif', 
-    'Noto Sans JP, sans-serif', 
-    'MS Gothic, sans-serif', 
-    'Hiragino Kaku Gothic ProN, sans-serif', 
+    'Roboto, sans-serif',
+    'Open Sans, sans-serif',
+    'Noto Sans JP, sans-serif',
+    'MS Gothic, sans-serif',
+    'Hiragino Kaku Gothic ProN, sans-serif',
   ];
 
   return (
     <DraggableResizableElement data={data} onUpdate={onUpdate} onSelect={onSelect} isSelected={isSelected} slideBounds={slideBounds} minWidth={50} minHeight={30} elementType="text" displayScale={displayScale} >
-      {isSelected && ( 
+      {isSelected && (
         <textarea ref={textAreaRef} value={data.text} onChange={handleChange} onMouseDown={(e)=>e.stopPropagation()} onClick={(e)=>e.stopPropagation()}
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            border: 'none', 
-            background: 'rgba(255,255,255,0.15)', 
-            color: data.color || '#000000', 
-            outline: 'none', 
-            resize: 'none', 
-            textAlign: data.textAlign || 'center', 
-            fontSize: `${displayedFontSize}px`, 
-            fontFamily: currentFontFamily, 
-            padding: `${5 * displayScale}px`, 
-            boxSizing: 'border-box', 
-            cursor: 'text', 
-            overflowWrap: 'break-word', 
-            whiteSpace: 'pre-wrap', 
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            background: 'rgba(255,255,255,0.15)',
+            color: data.color || '#000000',
+            outline: 'none',
+            resize: 'none',
+            textAlign: data.textAlign || 'center',
+            fontSize: `${displayedFontSize}px`,
+            fontFamily: currentFontFamily,
+            padding: `${5 * displayScale}px`,
+            boxSizing: 'border-box',
+            cursor: 'text',
+            overflowWrap: 'break-word',
+            whiteSpace: 'pre-wrap',
             userSelect: 'text',
-            lineHeight: `${1.2 * displayedFontSize}px`, 
+            lineHeight: `${1.2 * displayedFontSize}px`,
          }} />
       )}
       {!isSelected && data.text && ( <div style={{ width: '100%', height: '100%', pointerEvents: 'none' }}></div> )}
-      
+
       {isSelected && (
         <div style={{ position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', background: 'rgba(40,40,40,0.9)', padding: '5px 8px', borderRadius: '6px', zIndex: 20, display: 'flex', gap: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.3)', alignItems: 'center' }}
             onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} >
           <input type="color" value={data.color || '#FFFFFF'} onChange={(e) => handleStyleChange('color', e.target.value)} title={t('textColorTitle')} style={{height: '28px', width: '28px', border: '1px solid #555', borderRadius: '4px', cursor: 'pointer', background: 'transparent', padding: '2px'}} />
           <input type="number" value={designFontSize} onChange={(e) => handleStyleChange('fontSize', e.target.value)} min="8" max="120" title={t('fontSizeDesignTitle')} style={{width: '60px', height: '28px', border: '1px solid #555', borderRadius: '4px', background: '#333', color: '#fff', paddingLeft: '8px', textAlign: 'center'}}/>
-          <select 
-            value={currentFontFamily} 
-            onChange={(e) => handleStyleChange('fontFamily', e.target.value)} 
+          <select
+            value={currentFontFamily}
+            onChange={(e) => handleStyleChange('fontFamily', e.target.value)}
             title={t('fontFamilyTitle')}
             style={{height: '28px', border: '1px solid #555', borderRadius: '4px', background: '#333', color: '#fff', padding: '0 5px', maxWidth: '120px', fontSize: '0.8em'}}
           >
@@ -945,11 +1016,11 @@ const GlslShapeElement = ({ data, onUpdate, onSelect, isSelected, slideBounds, a
         });
     };
 
-    const displayColor = Array.isArray(data.baseColor) ? 
+    const displayColor = Array.isArray(data.baseColor) ?
         `#${Math.round(data.baseColor[0]*255).toString(16).padStart(2,'0')}${Math.round(data.baseColor[1]*255).toString(16).padStart(2,'0')}${Math.round(data.baseColor[2]*255).toString(16).padStart(2,'0')}`
-        : (data.baseColor || '#FFFFFF'); 
+        : (data.baseColor || '#FFFFFF');
     const displayAlpha = Array.isArray(data.baseColor) && data.baseColor.length === 4 ? data.baseColor[3] : 1.0;
-    
+
     const textureUniformNames = ['u_userTexture0', 'u_userTexture1', 'u_userTexture2'];
 
     return (
@@ -989,16 +1060,16 @@ const GlslShapeElement = ({ data, onUpdate, onSelect, isSelected, slideBounds, a
 const GLEditorPanel = ({ panelKey, title, shaderCode, onShaderCodeChange, currentHeight, onHeightChange, disabled = false, t }) => {
   const [isResizing, setIsResizing] = useState(false);
   const initialDragInfoRef = useRef({ y: 0, height: 0 });
-  const MIN_PANEL_HEIGHT = 80; 
-  const MAX_PANEL_HEIGHT = 600; 
+  const MIN_PANEL_HEIGHT = 80;
+  const MAX_PANEL_HEIGHT = 600;
 
   const glslExtension = [glsl()];
   const indentExtension = indentUnit.of("    ");
-  const RESIZE_HANDLE_HEIGHT = 10; 
+  const RESIZE_HANDLE_HEIGHT = 10;
 
   const handleResizeMouseDown = (e) => {
     e.preventDefault();
-    e.stopPropagation(); 
+    e.stopPropagation();
     setIsResizing(true);
     initialDragInfoRef.current = { y: e.clientY, height: currentHeight };
   };
@@ -1031,7 +1102,7 @@ const GLEditorPanel = ({ panelKey, title, shaderCode, onShaderCodeChange, curren
       document.body.style.cursor = 'default';
       document.body.style.userSelect = 'auto';
     };
-  }, [isResizing, panelKey, onHeightChange]); 
+  }, [isResizing, panelKey, onHeightChange]);
 
   if (typeof CodeMirror === 'undefined') {
     return (
@@ -1074,28 +1145,28 @@ const GLEditorPanel = ({ panelKey, title, shaderCode, onShaderCodeChange, curren
       background: disabled ? '#383b3e' : '#33363a',
       opacity: disabled ? 0.6 : 1,
       height: `${currentHeight}px`,
-      position: 'relative', 
+      position: 'relative',
       display: 'flex',
       flexDirection: 'column',
     }}>
-      <h4 style={{ 
-          margin: '10px 10px 0 10px', 
-          paddingBottom: '10px', 
-          borderBottom: '1px solid #4f5357', 
-          color: '#d0d0d0', 
-          fontSize: '0.95em', 
-          fontWeight: '600', 
-          flexShrink: 0 
+      <h4 style={{
+          margin: '10px 10px 0 10px',
+          paddingBottom: '10px',
+          borderBottom: '1px solid #4f5357',
+          color: '#d0d0d0',
+          fontSize: '0.95em',
+          fontWeight: '600',
+          flexShrink: 0
       }}>{title}</h4>
-      
-      <div style={{ 
-          flexGrow: 1, 
-          overflowY: 'auto', 
-          padding: '5px 10px 0px 10px' 
+
+      <div style={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          padding: '5px 10px 0px 10px'
       }}>
         <CodeMirror
           value={shaderCode}
-          height="100%" 
+          height="100%"
           extensions={[glslExtension, indentExtension]}
           onChange={(val) => onShaderCodeChange(val)}
           theme="dark"
@@ -1128,29 +1199,29 @@ const GLEditorPanel = ({ panelKey, title, shaderCode, onShaderCodeChange, curren
 
 
 const createNewSlide = () => ({
-  id: `slide_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, 
+  id: `slide_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
   backgroundShader: { fs: DEFAULT_BACKGROUND_FS },
   postProcessShader: { fs: DEFAULT_POST_PROCESS_FS },
-  elements: [], 
-  uploadedTextures: [], 
+  elements: [],
+  uploadedTextures: [],
 });
 
-const hexToRgba = (hex, alpha = 1.0) => { 
+const hexToRgba = (hex, alpha = 1.0) => {
     if (!hex) return [1,1,1,alpha]; let c;
     if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
         c= hex.substring(1).split(''); if(c.length== 3) c= [c[0], c[0], c[1], c[1], c[2], c[2]];
         c= '0x'+c.join(''); return [(c>>16&255)/255, (c>>8&255)/255, (c&255)/255, alpha];
     }
     if (Array.isArray(hex) && hex.length >= 3) { const newAlpha = (hex.length === 4 && typeof hex[3] === 'number') ? hex[3] : alpha; return [hex[0], hex[1], hex[2], newAlpha]; }
-    console.warn('[hexToRgba] Invalid hex color:', hex, 'defaulting to white with alpha', alpha); return [1,1,1,alpha]; 
+    console.warn('[hexToRgba] Invalid hex color:', hex, 'defaulting to white with alpha', alpha); return [1,1,1,alpha];
 }
 
-const DESIGN_WIDTH = 1280; 
-const DESIGN_HEIGHT = 720; 
+const DESIGN_WIDTH = 1280;
+const DESIGN_HEIGHT = 720;
 const SLIDE_ASPECT_RATIO = DESIGN_WIDTH / DESIGN_HEIGHT;
-const MIN_EDITOR_WIDTH = 300; 
-const MAX_EDITOR_WIDTH = 800; 
-const MAX_HISTORY_LENGTH = 20; // Max undo steps
+const MIN_EDITOR_WIDTH = 300;
+const MAX_EDITOR_WIDTH = 800;
+const MAX_HISTORY_LENGTH = 20;
 
 const App = () => {
   const [language, setLanguage] = useState('JP');
@@ -1158,31 +1229,31 @@ const App = () => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [selectedElementId, setSelectedElementId] = useState(null);
   const [shaderError, setShaderError] = useState("");
-  const [notification, setNotification] = useState(""); 
+  const [notification, setNotification] = useState("");
   const canvasOuterContainerRef = useRef(null);
-  const slideWrapperRef = useRef(null); 
+  const slideWrapperRef = useRef(null);
   const [slideWrapperSize, setSlideWrapperSize] = useState({width: 0, height: 0});
-  const fileInputRef = useRef(null); 
-  const importFileRef = useRef(null); 
-  const [isSlideshowMode, setIsSlideshowMode] = useState(false); 
-  const [editorWidth, setEditorWidth] = useState(400); 
+  const fileInputRef = useRef(null);
+  const importFileRef = useRef(null);
+  const [isSlideshowMode, setIsSlideshowMode] = useState(false);
+  const [editorWidth, setEditorWidth] = useState(400);
   const [isResizingEditor, setIsResizingEditor] = useState(false);
   const initialDragXRef = useRef(0);
   const [editorPanelHeights, setEditorPanelHeights] = useState({
     bg: 120,
     pp: 120,
-    el: 240, 
+    el: 240,
   });
   const [exportFilename, setExportFilename] = useState(translations.JP.defaultExportFilename);
-  const [copiedElement, setCopiedElement] = useState(null); 
-  const [history, setHistory] = useState([]); // For Undo
+  const [copiedElement, setCopiedElement] = useState(null);
+  const [history, setHistory] = useState([]);
 
   const t = useCallback((key, params = {}) => {
     let langToUse = language;
     if (!translations[langToUse]) {
-        langToUse = 'EN'; 
+        langToUse = 'EN';
     }
-    let str = translations[langToUse][key] || translations['EN'][key] || key; 
+    let str = translations[langToUse][key] || translations['EN'][key] || key;
     for (const param in params) {
       str = str.replace(new RegExp(`{${param}}`, 'g'), params[param]);
     }
@@ -1193,12 +1264,12 @@ const App = () => {
     const message = t(messageKey);
     setNotification(message);
     setTimeout(() => setNotification(""), 2000);
-  }, [t]); 
+  }, [t]);
 
   const recordHistory = useCallback(() => {
     setHistory(prevHistory => {
       const currentSnapshot = {
-        slides: JSON.parse(JSON.stringify(slides)), 
+        slides: JSON.parse(JSON.stringify(slides)),
         currentPageIndex,
         selectedElementId,
       };
@@ -1223,12 +1294,11 @@ const App = () => {
     showNotification('undoNotification');
   }, [history, showNotification]);
 
-  // goToPage must be defined before the useEffect that uses it.
-  const goToPage = useCallback((i) => { 
-    if (i >= 0 && i < slides.length) { 
-      setCurrentPageIndex(i); 
-      setSelectedElementId(null); 
-      setShaderError(""); 
+  const goToPage = useCallback((i) => {
+    if (i >= 0 && i < slides.length) {
+      setCurrentPageIndex(i);
+      setSelectedElementId(null);
+      setShaderError("");
     }
   }, [slides.length]);
 
@@ -1241,7 +1311,7 @@ const App = () => {
         if (prevFilename === oldDefaultJP || prevFilename === oldDefaultEN) {
             return currentDefault;
         }
-        return prevFilename; 
+        return prevFilename;
     });
   }, [language, t]);
 
@@ -1251,18 +1321,18 @@ const App = () => {
 
   const currentSlide = slides[currentPageIndex];
 
-	useEffect(() => {
-		if (currentSlide) {
-			console.log('[App] currentSlide.uploadedTextures:', JSON.stringify(currentSlide.uploadedTextures, null, 2));
-			currentSlide.uploadedTextures.forEach((texture, index) => {
-				console.log(`[App] Texture ${index} ID: ${texture.id}, Name: ${texture.name}, Has dataUrl: ${!!texture.dataUrl}, DataUrl length: ${texture.dataUrl ? texture.dataUrl.length : 'N/A'}`);
-				// dataUrlが長すぎる場合は、最初の数文字だけ表示するなどの工夫もアリ
-				// console.log(`[App] Texture ${index} dataUrl (first 100 chars): ${texture.dataUrl ? texture.dataUrl.substring(0, 100) : 'N/A'}`);
-			});
-		} else {
-			console.log('[App] currentSlide is null or undefined');
-		}
-	}, [currentSlide]); // currentSlideが変更されるたびにログ出力
+  // ★★★ App コンポーネントの currentSlide 監視ログ ★★★
+  useEffect(() => {
+    if (currentSlide) {
+      console.log('[App currentSlideEffect] currentSlide.uploadedTextures:', JSON.stringify(currentSlide.uploadedTextures, null, 2));
+      currentSlide.uploadedTextures.forEach((texture, index) => {
+        console.log(`[App currentSlideEffect] Texture ${index} ID: ${texture.id}, Name: ${texture.name}, Has dataUrl: ${!!texture.dataUrl}, DataUrl length: ${texture.dataUrl ? texture.dataUrl.length : 'N/A'}`);
+      });
+    } else {
+      console.log('[App currentSlideEffect] currentSlide is null or undefined');
+    }
+  }, [currentSlide]);
+
 
   useEffect(() => {
     const calculateAndSetSizes = () => {
@@ -1297,29 +1367,29 @@ const App = () => {
 
         newWrapperWidth = Math.max(10, Math.floor(newWrapperWidth));
         newWrapperHeight = Math.max(10, Math.floor(newWrapperHeight));
-        
+
         if (slideWrapperSize.width !== newWrapperWidth || slideWrapperSize.height !== newWrapperHeight) {
             setSlideWrapperSize({ width: newWrapperWidth, height: newWrapperHeight });
         }
     };
 
-    calculateAndSetSizes(); 
+    calculateAndSetSizes();
     window.addEventListener('resize', calculateAndSetSizes);
-    
+
     let resizeObserver;
     if (typeof ResizeObserver !== 'undefined' && canvasOuterContainerRef.current && !isSlideshowMode) {
         resizeObserver = new ResizeObserver(calculateAndSetSizes);
         resizeObserver.observe(canvasOuterContainerRef.current);
     }
-    
-    return () => { 
+
+    return () => {
         window.removeEventListener('resize', calculateAndSetSizes);
-        if (resizeObserver && canvasOuterContainerRef.current && !isSlideshowMode) { 
+        if (resizeObserver && canvasOuterContainerRef.current && !isSlideshowMode) {
              resizeObserver.unobserve(canvasOuterContainerRef.current);
         }
         resizeObserver?.disconnect();
     };
-  }, [isSlideshowMode, slideWrapperSize.width, slideWrapperSize.height, editorWidth]); 
+  }, [isSlideshowMode, slideWrapperSize.width, slideWrapperSize.height, editorWidth]);
 
 
   useEffect(() => {
@@ -1335,7 +1405,7 @@ const App = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => { window.removeEventListener('keydown', handleKeyDown); };
-  }, [isSlideshowMode, currentPageIndex, slides.length, goToPage]); 
+  }, [isSlideshowMode, currentPageIndex, slides.length, goToPage]);
 
   const handleEditorResizeMouseDown = (e) => {
     e.preventDefault();
@@ -1348,7 +1418,7 @@ const App = () => {
       if (!isResizingEditor) return;
       let newWidth = e.clientX - initialDragXRef.current;
       newWidth = Math.max(MIN_EDITOR_WIDTH, Math.min(newWidth, MAX_EDITOR_WIDTH));
-      newWidth = Math.min(newWidth, window.innerWidth - 200); 
+      newWidth = Math.min(newWidth, window.innerWidth - 200);
       setEditorWidth(newWidth);
     };
 
@@ -1374,16 +1444,16 @@ const App = () => {
     }));
   };
 
-  const addPage = useCallback(() => { 
-    recordHistory(); 
+  const addPage = useCallback(() => {
+    recordHistory();
     const newSlide = createNewSlide();
     const newSlides = [...slides];
     newSlides.splice(currentPageIndex + 1, 0, newSlide);
-    setSlides(newSlides); 
-    setCurrentPageIndex(currentPageIndex + 1); 
-    setSelectedElementId(null); 
-    setShaderError(""); 
-  }, [slides, currentPageIndex, recordHistory]); 
+    setSlides(newSlides);
+    setCurrentPageIndex(currentPageIndex + 1);
+    setSelectedElementId(null);
+    setShaderError("");
+  }, [slides, currentPageIndex, recordHistory]);
 
   const deletePage = useCallback(() => {
     if (slides.length <= 1) {
@@ -1391,18 +1461,18 @@ const App = () => {
       return;
     }
     if (window.confirm(t('confirmDeletePageMessage'))) {
-      recordHistory(); 
+      recordHistory();
       const newSlides = slides.filter((_, index) => index !== currentPageIndex);
       setSlides(newSlides);
       setCurrentPageIndex(prevIndex => Math.max(0, Math.min(prevIndex, newSlides.length - 1)));
       setSelectedElementId(null);
       setShaderError("");
     }
-  }, [slides, currentPageIndex, t, recordHistory]); 
+  }, [slides, currentPageIndex, t, recordHistory]);
 
   const handleImageUpload = useCallback((event) => {
     if (!currentSlide) return;
-    recordHistory(); 
+    recordHistory();
     const files = Array.from(event.target.files);
     const currentTextureCount = currentSlide.uploadedTextures.length;
     const availableSlots = 3 - currentTextureCount;
@@ -1422,20 +1492,20 @@ const App = () => {
                 name: file.name,
                 dataUrl: e.target.result,
             };
-            setSlides(prevSlides => prevSlides.map((slide, index) => 
-                index === currentPageIndex 
-                ? { ...slide, uploadedTextures: [...slide.uploadedTextures, newTexture].slice(0, 3) } 
+            setSlides(prevSlides => prevSlides.map((slide, index) =>
+                index === currentPageIndex
+                ? { ...slide, uploadedTextures: [...slide.uploadedTextures, newTexture].slice(0, 3) }
                 : slide
             ));
         };
         reader.readAsDataURL(file);
     });
     if(fileInputRef.current) fileInputRef.current.value = "";
-  }, [currentSlide, recordHistory, t, currentPageIndex]); 
+  }, [currentSlide, recordHistory, t, currentPageIndex]);
 
   const handleDeleteTexture = useCallback((textureId) => {
     if (!currentSlide) return;
-    recordHistory(); 
+    recordHistory();
     setSlides(prevSlides => prevSlides.map((slide, index) => {
         if (index === currentPageIndex) {
             const newElements = slide.elements.map(el => {
@@ -1452,78 +1522,78 @@ const App = () => {
                 }
                 return el;
             });
-            return { 
-                ...slide, 
+            return {
+                ...slide,
                 elements: newElements,
-                uploadedTextures: slide.uploadedTextures.filter(t => t.id !== textureId) 
+                uploadedTextures: slide.uploadedTextures.filter(t => t.id !== textureId)
             };
         }
         return slide;
     }));
-  }, [currentSlide, recordHistory, currentPageIndex]); 
+  }, [currentSlide, recordHistory, currentPageIndex]);
 
   const addElement = useCallback((type, elementData = null) => {
     const baseWidth = DESIGN_WIDTH;
     const baseHeight = DESIGN_HEIGHT;
 
-    if (!currentSlide || baseWidth <= 10 || baseHeight <= 10) { 
-        setShaderError(t('addElementErrorCanvasNotReady', { baseWidth, baseHeight })); 
-        return; 
+    if (!currentSlide || baseWidth <= 10 || baseHeight <= 10) {
+        setShaderError(t('addElementErrorCanvasNotReady', { baseWidth, baseHeight }));
+        return;
     }
-    recordHistory(); 
-    setShaderError(""); 
+    recordHistory();
+    setShaderError("");
     const newId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-    
+
     let newEl;
-    if (elementData) { 
+    if (elementData) {
         newEl = {
-            ...elementData, 
-            id: newId,      
-            x: (elementData.x || 0) + 20, 
+            ...elementData,
+            id: newId,
+            x: (elementData.x || 0) + 20,
             y: (elementData.y || 0) + 20,
         };
-    } else { 
-        const defW_ratio = type === 'text' ? 0.25 : 0.2; 
-        const defH_ratio = type === 'text' ? 0.1 : 0.2;  
-        const defW_px = Math.max(50, Math.min(type==='text'?320:250, baseWidth * defW_ratio)); 
+    } else {
+        const defW_ratio = type === 'text' ? 0.25 : 0.2;
+        const defH_ratio = type === 'text' ? 0.1 : 0.2;
+        const defW_px = Math.max(50, Math.min(type==='text'?320:250, baseWidth * defW_ratio));
         const defH_px = Math.max(30, Math.min(type==='text'?70:140, baseHeight * defH_ratio));
 
         let specifics = {};
         if (type === 'text') {
-          specifics = { 
-            text: t('newTextDefault'), 
-            fontSize: Math.max(12,Math.min(36,Math.floor(baseHeight/20))), 
-            color: '#FFFFFF', 
-            textAlign: 'center', 
-            fontFamily: 'Verdana, sans-serif' 
+          specifics = {
+            text: t('newTextDefault'),
+            fontSize: Math.max(12,Math.min(36,Math.floor(baseHeight/20))),
+            color: '#FFFFFF',
+            textAlign: 'center',
+            fontFamily: 'Verdana, sans-serif'
           };
         } else if (type === 'glsl_shape') {
-          specifics = { 
-            materialShader: { fs: DEFAULT_ELEMENT_MATERIAL_FS }, 
-            baseColor: [1,0,1,1], 
-            textureBindings: { u_userTexture0: null, u_userTexture1: null, u_userTexture2: null } 
+          specifics = {
+            materialShader: { fs: DEFAULT_ELEMENT_MATERIAL_FS },
+            baseColor: [1,0,1,1],
+            textureBindings: { u_userTexture0: null, u_userTexture1: null, u_userTexture2: null }
           };
         }
-        
-        newEl = { 
-            id: newId, 
-            type, 
-            x: Math.max(5,(baseWidth-defW_px)/2)+(Math.random()*20-10), 
-            y: Math.max(5,(baseHeight-defH_px)/2)+(Math.random()*20-10), 
-            width: defW_px, 
-            height: defH_px, 
-            ...specifics 
+
+        newEl = {
+            id: newId,
+            type,
+            x: Math.max(5,(baseWidth-defW_px)/2)+(Math.random()*20-10),
+            y: Math.max(5,(baseHeight-defH_px)/2)+(Math.random()*20-10),
+            width: defW_px,
+            height: defH_px,
+            ...specifics
         };
     }
     setSlides(s => s.map((sl,i) => i===currentPageIndex ? {...sl, elements:[...sl.elements,newEl]} : sl));
     setSelectedElementId(newId);
     if (elementData) showNotification('pastedElementNotification');
-  }, [currentSlide, t, recordHistory, currentPageIndex, showNotification]); 
+  }, [currentSlide, t, recordHistory, currentPageIndex, showNotification]);
 
   const updateElement = useCallback((id, updates) => {
-    recordHistory(); 
+    recordHistory();
     setSlides(s => s.map((sl,i) => i===currentPageIndex ? {...sl, elements: sl.elements.map(el => el.id===id ? {...el,...updates} : el)} : sl));
-  }, [currentPageIndex, recordHistory]); 
+  }, [currentPageIndex, recordHistory]);
 
   const handleShaderError = useCallback((errorInfo) => {
     if (!errorInfo) {
@@ -1537,28 +1607,28 @@ const App = () => {
     } else {
       setShaderError(t('unknownError'));
     }
-  }, [t]); 
+  }, [t]);
 
   const handleBgShaderChange = useCallback((fs) => {
     recordHistory();
     setSlides(s=>s.map((sl,i)=>i===currentPageIndex?{...sl,backgroundShader:{...sl.backgroundShader,fs}}:sl));
-  }, [currentPageIndex, recordHistory]); 
+  }, [currentPageIndex, recordHistory]);
 
   const handlePpShaderChange = useCallback((fs) => {
     recordHistory();
     setSlides(s=>s.map((sl,i)=>i===currentPageIndex?{...sl,postProcessShader:{...sl.postProcessShader,fs}}:sl));
-  }, [currentPageIndex, recordHistory]); 
+  }, [currentPageIndex, recordHistory]);
 
   const handleElMatShaderChange = useCallback((fs) => {
     if (!selectedElementId || !currentSlide) return;
     recordHistory();
     setSlides(s=>s.map((sl,i)=>i===currentPageIndex?{...sl,elements:sl.elements.map(el=>el.id===selectedElementId&&el.type==='glsl_shape'?{...el,materialShader:{...(el.materialShader||{}),fs}}:el)}:sl));
-  }, [currentPageIndex, recordHistory, selectedElementId, currentSlide]); 
+  }, [currentPageIndex, recordHistory, selectedElementId, currentSlide]);
 
   const selectedElement = currentSlide?.elements.find(el => el.id === selectedElementId);
 
   const handleCanvasClick = (e) => {
-      if (isSlideshowMode) return; 
+      if (isSlideshowMode) return;
       if (slideWrapperRef.current && (e.target === canvasOuterContainerRef.current || e.target === slideWrapperRef.current)) setSelectedElementId(null);
       else if (slideWrapperRef.current?.contains(e.target)) {
           let tgt = e.target; let isInteractive = false;
@@ -1573,36 +1643,35 @@ const App = () => {
 
   const deleteSelectedElement = useCallback(() => {
     if (!selectedElementId) return;
-    recordHistory(); 
+    recordHistory();
     setSlides(s=>s.map((sl,i)=>i===currentPageIndex?{...sl,elements:sl.elements.filter(el=>el.id!==selectedElementId)}:sl));
-    setSelectedElementId(null); setShaderError(""); 
+    setSelectedElementId(null); setShaderError("");
   }, [selectedElementId, currentPageIndex, recordHistory]);
 
-  // --- Keyboard Shortcuts (Copy, Paste, Delete, Undo) ---
   useEffect(() => {
-    if (isSlideshowMode) return; 
+    if (isSlideshowMode) return;
     const handleKeyDown = (e) => {
       const activeEl = document.activeElement;
       const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.closest('.CodeMirror'));
 
-      if (e.ctrlKey || e.metaKey) { 
-        if (e.key === 'c' || e.key === 'C') { 
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'c' || e.key === 'C') {
           if (selectedElementId && currentSlide) {
             const elementToCopy = currentSlide.elements.find(el => el.id === selectedElementId);
             if (elementToCopy) {
               const { id, ...copyData } = JSON.parse(JSON.stringify(elementToCopy));
               setCopiedElement(copyData);
               showNotification('copiedElementNotification');
-              e.preventDefault(); 
+              e.preventDefault();
             }
           }
-        } else if (e.key === 'v' || e.key === 'V') { 
+        } else if (e.key === 'v' || e.key === 'V') {
           if (copiedElement && currentSlide) {
-            addElement(copiedElement.type, copiedElement); 
-            e.preventDefault(); 
+            addElement(copiedElement.type, copiedElement);
+            e.preventDefault();
           }
-        } else if (e.key === 'z' || e.key === 'Z') { 
-            if (!isInputFocused) { 
+        } else if (e.key === 'z' || e.key === 'Z') {
+            if (!isInputFocused) {
                 e.preventDefault();
                 handleUndo();
             }
@@ -1611,19 +1680,19 @@ const App = () => {
         e.preventDefault(); deleteSelectedElement();
       }
     };
-    window.addEventListener('keydown', handleKeyDown); 
+    window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElementId, deleteSelectedElement, isSlideshowMode, currentSlide, copiedElement, addElement, showNotification, handleUndo, recordHistory]); 
+  }, [selectedElementId, deleteSelectedElement, isSlideshowMode, currentSlide, copiedElement, addElement, showNotification, handleUndo, recordHistory]);
 
 
   const handleExportData = () => {
     const dataToExport = slides.map(slide => {
         return {
             ...slide,
-            uploadedTextures: slide.uploadedTextures.map(texture => ({ 
-                id: texture.id, 
-                name: texture.name, 
-                dataUrl: texture.dataUrl 
+            uploadedTextures: slide.uploadedTextures.map(texture => ({
+                id: texture.id,
+                name: texture.name,
+                dataUrl: texture.dataUrl
             })),
         };
     });
@@ -1633,12 +1702,12 @@ const App = () => {
     const a = document.createElement('a');
     a.href = url;
     const finalFilename = exportFilename.endsWith('.json') ? exportFilename : `${exportFilename}.json`;
-    a.download = finalFilename; 
+    a.download = finalFilename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    setShaderError(t('exportSuccess')); 
+    setShaderError(t('exportSuccess'));
   };
 
   const handleImportData = (event) => {
@@ -1654,25 +1723,25 @@ const App = () => {
         if (!Array.isArray(importedData)) {
           throw new Error(t('importErrorNotArray'));
         }
-        
-        recordHistory(); 
+
+        recordHistory();
         const validatedSlides = importedData.map(slide => ({
           id: slide.id || `imported_slide_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
           backgroundShader: slide.backgroundShader || { fs: DEFAULT_BACKGROUND_FS },
           postProcessShader: slide.postProcessShader || { fs: DEFAULT_POST_PROCESS_FS },
           elements: slide.elements || [],
           uploadedTextures: (slide.uploadedTextures || []).map(texture => ({
-              id: texture.id || `imported_tex_${Date.now()}_${Math.random().toString(36).substr(2,5)}`, 
+              id: texture.id || `imported_tex_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
               name: texture.name || 'Unnamed Imported Texture',
-              dataUrl: texture.dataUrl || null 
+              dataUrl: texture.dataUrl || null
           })),
         }));
 
-        setSlides(validatedSlides.length > 0 ? validatedSlides : [createNewSlide()]); 
+        setSlides(validatedSlides.length > 0 ? validatedSlides : [createNewSlide()]);
         setCurrentPageIndex(0);
         setSelectedElementId(null);
-        setShaderError(t('importSuccess')); 
-        setHistory([]); 
+        setShaderError(t('importSuccess'));
+        setHistory([]);
       } catch (error) {
         console.error("Import error:", error);
         setShaderError(t('importErrorGeneric', { message: error.message }));
@@ -1682,7 +1751,7 @@ const App = () => {
         setShaderError(t('importFileReadError'));
     }
     reader.readAsText(file);
-    if (importFileRef.current) importFileRef.current.value = ""; 
+    if (importFileRef.current) importFileRef.current.value = "";
   };
 
 
@@ -1694,9 +1763,9 @@ const App = () => {
 
   const rendererWidth = slideWrapperSize.width;
   const rendererHeight = slideWrapperSize.height;
-  
-  const displayScale = DESIGN_WIDTH > 0 && slideWrapperSize.width > 0 
-                     ? slideWrapperSize.width / DESIGN_WIDTH 
+
+  const displayScale = DESIGN_WIDTH > 0 && slideWrapperSize.width > 0
+                     ? slideWrapperSize.width / DESIGN_WIDTH
                      : 1;
 
   return (
@@ -1712,25 +1781,25 @@ const App = () => {
         </div>
       )}
 
-      <div style={{ 
-            width: isSlideshowMode ? '0px' : `${editorWidth}px`, 
+      <div style={{
+            width: isSlideshowMode ? '0px' : `${editorWidth}px`,
             minWidth: isSlideshowMode ? '0px' : `${MIN_EDITOR_WIDTH}px`,
-            padding: isSlideshowMode ? '0' : '20px', 
-            background: '#2a2d31' , 
-            color: '#ccc', 
-            overflowY: 'auto', 
+            padding: isSlideshowMode ? '0' : '20px',
+            background: '#2a2d31' ,
+            color: '#ccc',
+            overflowY: 'auto',
             overflowX: 'hidden',
-            borderRight: isSlideshowMode ? 'none' : '1px solid #3c3f41', 
-            display: isSlideshowMode ? 'none' : 'flex', 
-            flexDirection: 'column', 
+            borderRight: isSlideshowMode ? 'none' : '1px solid #3c3f41',
+            display: isSlideshowMode ? 'none' : 'flex',
+            flexDirection: 'column',
             boxShadow: '3px 0 10px rgba(0,0,0,0.2)',
-            position: 'relative', 
-            flexShrink: 0, 
+            position: 'relative',
+            flexShrink: 0,
         }}>
-        
+
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
             <h2 style={{textAlign: 'left', margin: '0', color: '#58a6ff', fontSize: '1.6em', fontWeight: '600', flexGrow: 1 }}>{t('glslSlides')}</h2>
-            <button 
+            <button
                 onClick={toggleLanguage}
                 style={{...btnStyle, padding: '6px 10px', fontSize: '0.8em', background: '#4A5568', marginLeft: '10px'}}
                 onMouseOver={e=>{e.currentTarget.style.background='#2D3748';e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}}
@@ -1743,8 +1812,8 @@ const App = () => {
 
         <div style={{marginBottom: '10px'}}>
             <label htmlFor="exportFilenameInput" style={{fontSize: '0.9em', color: '#c0c0c0', display: 'block', marginBottom: '5px'}}>{t('exportFilenameLabel')}</label>
-            <input 
-                type="text" 
+            <input
+                type="text"
                 id="exportFilenameInput"
                 value={exportFilename}
                 onChange={(e) => setExportFilename(e.target.value)}
@@ -1752,9 +1821,9 @@ const App = () => {
                 style={{width: 'calc(100% - 12px)', padding: '8px', borderRadius: '4px', border: '1px solid #4f5357', background: '#33363a', color: '#ccc', boxSizing: 'border-box'}}
             />
         </div>
-        
+
         <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '15px'}}>
-            <button 
+            <button
                 onClick={handleExportData}
                 style={{...btnStyle, flexGrow: 1, marginRight: '5px', background: 'linear-gradient(145deg, #6c757d, #5a6268)'}}
                 onMouseOver={e=>{e.currentTarget.style.background='linear-gradient(145deg, #7a8288, #686e74)';e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}}
@@ -1763,7 +1832,7 @@ const App = () => {
                 {t('exportData')}
             </button>
             <input type="file" ref={importFileRef} onChange={handleImportData} accept=".json" style={{ display: 'none' }} />
-            <button 
+            <button
                 onClick={() => importFileRef.current && importFileRef.current.click()}
                 style={{...btnStyle, flexGrow: 1, marginLeft: '5px', background: 'linear-gradient(145deg, #17a2b8, #138496)'}}
                 onMouseOver={e=>{e.currentTarget.style.background='linear-gradient(145deg, #19b1c9, #159aaf)';e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}}
@@ -1773,10 +1842,10 @@ const App = () => {
             </button>
         </div>
 
-        <button 
-            onClick={() => setIsSlideshowMode(true)} 
+        <button
+            onClick={() => setIsSlideshowMode(true)}
             style={{...btnStyle, width:'100%', marginBottom:'20px', padding:'10px 0', fontSize:'1em', background: 'linear-gradient(145deg, #28a745, #218838)'}}
-            onMouseOver={e=>{e.currentTarget.style.background='linear-gradient(145deg, #2db950, #249740)';e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}} 
+            onMouseOver={e=>{e.currentTarget.style.background='linear-gradient(145deg, #2db950, #249740)';e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}}
             onMouseOut={e=>{e.currentTarget.style.background='linear-gradient(145deg, #28a745, #218838)';e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}
         >
             {t('startSlideshow')}
@@ -1789,17 +1858,17 @@ const App = () => {
         </div>
         <div style={{display: 'flex', justifyContent: 'space-between', marginBottom:'10px'}}>
             <button onClick={addPage} style={{...btnStyle, flexGrow:1, marginRight: '5px', padding:'10px 0'}} onMouseOver={e=>{e.currentTarget.style.background=hoverStyle.background;e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}} onMouseOut={e=>{e.currentTarget.style.background=btnStyle.background;e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}>{t('addNewPage')}</button>
-            <button 
-                onClick={deletePage} 
+            <button
+                onClick={deletePage}
                 disabled={slides.length <= 1}
-                style={{...deleteBtnStyle, flexGrow:1, marginLeft: '5px', padding:'10px 0', opacity: slides.length <=1 ? 0.5 : 1}} 
-                onMouseOver={e=>{if(slides.length > 1){e.currentTarget.style.background=deleteBtnHoverStyle.background;e.currentTarget.style.boxShadow=deleteBtnHoverStyle.boxShadow;}}} 
+                style={{...deleteBtnStyle, flexGrow:1, marginLeft: '5px', padding:'10px 0', opacity: slides.length <=1 ? 0.5 : 1}}
+                onMouseOver={e=>{if(slides.length > 1){e.currentTarget.style.background=deleteBtnHoverStyle.background;e.currentTarget.style.boxShadow=deleteBtnHoverStyle.boxShadow;}}}
                 onMouseOut={e=>{e.currentTarget.style.background=deleteBtnStyle.background;e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}
             >
                 {t('deletePageButton')}
             </button>
         </div>
-        
+
         <button onClick={()=>addElement('text')} disabled={!currentSlide} style={{...btnStyle,width:'100%',marginBottom:'10px',padding:'10px 0',fontSize:'1em',opacity:(!currentSlide)?0.5:1}} onMouseOver={e=>{if(currentSlide){e.currentTarget.style.background=hoverStyle.background;e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}}} onMouseOut={e=>{e.currentTarget.style.background=btnStyle.background;e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}>{t('addTextElement')}</button>
         <button onClick={()=>addElement('glsl_shape')} disabled={!currentSlide} style={{...btnStyle,width:'100%',marginBottom:'15px',padding:'10px 0',fontSize:'1em',opacity:(!currentSlide)?0.5:1}} onMouseOver={e=>{if(currentSlide){e.currentTarget.style.background=hoverStyle.background;e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}}} onMouseOut={e=>{e.currentTarget.style.background=btnStyle.background;e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}>{t('addGlslElement')}</button>
 
@@ -1821,47 +1890,47 @@ const App = () => {
         )}
 
         {currentSlide && ( <>
-            <GLEditorPanel 
+            <GLEditorPanel
                 panelKey="bg"
-                title={t('pageBackgroundFS', { pageNumber: currentPageIndex + 1 })} 
-                shaderCode={currentSlide.backgroundShader.fs} 
-                onShaderCodeChange={handleBgShaderChange} 
+                title={t('pageBackgroundFS', { pageNumber: currentPageIndex + 1 })}
+                shaderCode={currentSlide.backgroundShader.fs}
+                onShaderCodeChange={handleBgShaderChange}
                 currentHeight={editorPanelHeights.bg}
                 onHeightChange={handleEditorPanelHeightChange}
                 t={t}
             />
-            <GLEditorPanel 
+            <GLEditorPanel
                 panelKey="pp"
-                title={t('pagePostEffectFS', { pageNumber: currentPageIndex + 1 })} 
-                shaderCode={currentSlide.postProcessShader.fs} 
-                onShaderCodeChange={handlePpShaderChange} 
+                title={t('pagePostEffectFS', { pageNumber: currentPageIndex + 1 })}
+                shaderCode={currentSlide.postProcessShader.fs}
+                onShaderCodeChange={handlePpShaderChange}
                 currentHeight={editorPanelHeights.pp}
                 onHeightChange={handleEditorPanelHeightChange}
                 t={t}
             />
-            <GLEditorPanel 
+            <GLEditorPanel
                 panelKey="el"
                 title={selectedElement?.type==='glsl_shape'? t('selectedShapeMaterialFS', { elementId: selectedElement.id.slice(-5) }) : t('glslShapeMaterial')}
                 shaderCode={selectedElement?.type==='glsl_shape'&&selectedElement?.materialShader?.fs?selectedElement.materialShader.fs: t('editTextInstruction')}
-                onShaderCodeChange={handleElMatShaderChange} 
+                onShaderCodeChange={handleElMatShaderChange}
                 currentHeight={editorPanelHeights.el}
                 onHeightChange={handleEditorPanelHeightChange}
-                disabled={!selectedElement||selectedElement.type!=='glsl_shape'} 
+                disabled={!selectedElement||selectedElement.type!=='glsl_shape'}
                 t={t}
             />
         </>)}
         {shaderError && <pre style={{color:'#ff7b7b',whiteSpace:'pre-wrap',background:'#3d2323',border:'1px solid #ff7b7b',padding:'12px',borderRadius:'5px',marginTop:'15px',fontSize:'0.9em',maxHeight:'100px',overflowY:'auto',fontFamily:'monospace'}}>{t('errorPrefix')}{shaderError}</pre>}
       </div>
-      
+
       {!isSlideshowMode && (
-        <div 
+        <div
           onMouseDown={handleEditorResizeMouseDown}
           style={{
             width: '8px',
             cursor: 'ew-resize',
-            background: '#15171a', 
+            background: '#15171a',
             position: 'relative',
-            zIndex: 50, 
+            zIndex: 50,
             flexShrink: 0,
             display: 'flex',
             alignItems: 'center',
@@ -1871,25 +1940,25 @@ const App = () => {
             <div style={{width: '2px', height: '30px', background: '#4f5357', borderRadius: '1px'}}></div>
         </div>
       )}
-      
-      <div 
-        ref={canvasOuterContainerRef} 
+
+      <div
+        ref={canvasOuterContainerRef}
         style={{
-            flexGrow: 1, 
+            flexGrow: 1,
             height: '100vh',
-            position:'relative', 
-            background: isSlideshowMode ? '#000000' : '#121212', 
+            position:'relative',
+            background: isSlideshowMode ? '#000000' : '#121212',
             overflow:'hidden',
             display:'flex',
             alignItems:'center',
             justifyContent:'center',
             cursor:'default',
-            zIndex: isSlideshowMode ? 1000 : 'auto', 
-        }} 
-        onClick={handleCanvasClick} 
+            zIndex: isSlideshowMode ? 1000 : 'auto',
+        }}
+        onClick={handleCanvasClick}
       >
-        <div 
-            ref={slideWrapperRef} 
+        <div
+            ref={slideWrapperRef}
             style={{
                 width:`${rendererWidth}px`,
                 height:`${rendererHeight}px`,
@@ -1899,16 +1968,16 @@ const App = () => {
             }}
         >
             {(currentSlide && rendererWidth > 10 && rendererHeight > 10) ? ( <>
-                <SlideRenderer 
-                  key={`${currentSlide.id}-${rendererWidth}-${rendererHeight}-${JSON.stringify(currentSlide.uploadedTextures)}-${isSlideshowMode}-${language}-${selectedElementId}`} 
-                  slideData={currentSlide} 
-                  canvasWidth={rendererWidth} 
-                  canvasHeight={rendererHeight} 
+                <SlideRenderer
+                  key={`${currentSlide.id}-${rendererWidth}-${rendererHeight}-${JSON.stringify(currentSlide.uploadedTextures)}-${isSlideshowMode}-${language}-${selectedElementId}`}
+                  slideData={currentSlide}
+                  canvasWidth={rendererWidth}
+                  canvasHeight={rendererHeight}
                   onShaderError={handleShaderError}
-                  selectedElementId={selectedElementId} 
+                  selectedElementId={selectedElementId}
                   isSlideshowMode={isSlideshowMode}
-                  designSlideWidth={DESIGN_WIDTH} 
-                  designSlideHeight={DESIGN_HEIGHT} 
+                  designSlideWidth={DESIGN_WIDTH}
+                  designSlideHeight={DESIGN_HEIGHT}
                   t={t}
                 />
                 {(!isSlideshowMode && currentSlide.elements) && currentSlide.elements.map(el => {
