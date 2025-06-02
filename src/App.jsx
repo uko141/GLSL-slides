@@ -272,7 +272,6 @@ function createFramebufferWithTexture(gl, width, height, texture) {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
     const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (status !== gl.FRAMEBUFFER_COMPLETE) {
-        // console.error('[SlideRenderer createFramebufferWithTexture] Framebuffer not complete:', status); // Removed for production
         gl.deleteFramebuffer(fb);
         gl.deleteTexture(texture);
         return null;
@@ -1209,7 +1208,6 @@ const hexToRgba = (hex, alpha = 1.0) => {
         c= '0x'+c.join(''); return [(c>>16&255)/255, (c>>8&255)/255, (c&255)/255, alpha];
     }
     if (Array.isArray(hex) && hex.length >= 3) { const newAlpha = (hex.length === 4 && typeof hex[3] === 'number') ? hex[3] : alpha; return [hex[0], hex[1], hex[2], newAlpha]; }
-    // console.warn('[hexToRgba] Invalid hex color:', hex, 'defaulting to white with alpha', alpha); // Removed for production
     return [1,1,1,alpha];
 }
 
@@ -1239,7 +1237,7 @@ const App = () => {
   const [editorPanelHeights, setEditorPanelHeights] = useState({
     bg: 120,
     pp: 120,
-    el: 240,
+    el: 600,
   });
   const [exportFilename, setExportFilename] = useState(translations.JP.defaultExportFilename);
   const [copiedElement, setCopiedElement] = useState(null);
@@ -1636,10 +1634,15 @@ const App = () => {
     if (isSlideshowMode) return;
     const handleKeyDown = (e) => {
       const activeEl = document.activeElement;
-      const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.closest('.CodeMirror'));
+      // CodeMirrorのラッパー要素(.cm-editor)にフォーカスがある場合もisInputFocusedとみなす
+      const isInputFocused = activeEl && (
+        activeEl.tagName === 'INPUT' || 
+        activeEl.tagName === 'TEXTAREA' || 
+        activeEl.closest('.cm-editor') // ★ CodeMirrorのクラス名で判定
+      );
 
       if (e.ctrlKey || e.metaKey) {
-        if (e.key === 'c' || e.key === 'C') {
+        if (!isInputFocused && (e.key === 'c' || e.key === 'C')) { // CodeMirror編集中は要素コピーを無効化
           if (selectedElementId && currentSlide) {
             const elementToCopy = currentSlide.elements.find(el => el.id === selectedElementId);
             if (elementToCopy) {
@@ -1649,7 +1652,7 @@ const App = () => {
               e.preventDefault();
             }
           }
-        } else if (e.key === 'v' || e.key === 'V') {
+        } else if (!isInputFocused && (e.key === 'v' || e.key === 'V')) { // CodeMirror編集中は要素ペーストを無効化
           if (copiedElement && currentSlide) {
             addElement(copiedElement.type, copiedElement);
             e.preventDefault();
@@ -1727,7 +1730,6 @@ const App = () => {
         setShaderError(t('importSuccess'));
         setHistory([]);
       } catch (error) {
-        // console.error("Import error:", error); // Removed for production
         setShaderError(t('importErrorGeneric', { message: error.message }));
       }
     };
