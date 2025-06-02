@@ -1,0 +1,56 @@
+# .github/workflows/deploy.yml
+
+name: Deploy Vite site to GitHub Pages
+
+on:
+  # mainブランチにプッシュされた時にワークフローを実行
+  push:
+    branches:
+      - main # あなたのメインブランチ名に合わせてください (例: master)
+  # 手動でワークフローを実行することも可能にする
+  workflow_dispatch:
+
+# ワークフローの実行に必要な権限を設定
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. リポジトリのコードをチェックアウト
+      - name: Checkout code
+        uses: actions/checkout@v4 # 最新バージョンを使用することを推奨
+
+      # 2. Node.js環境をセットアップ
+      - name: Set up Node.js
+        uses: actions/setup-node@v4 # 最新バージョンを使用
+        with:
+          node-version: '20' # プロジェクトで使用しているNode.jsのバージョンに合わせてください
+          cache: 'npm' # npm, yarn, pnpm など使用するパッケージマネージャに合わせてください
+
+      # 3. 依存関係をインストール
+      # package-lock.json (または yarn.lock, pnpm-lock.yaml) がある場合は 'npm ci' を推奨
+      - name: Install dependencies
+        run: npm ci # または yarn install --frozen-lockfile, pnpm install --frozen-lockfile
+
+      # 4. Viteプロジェクトをビルド
+      # GitHub Pagesのサブディレクトリにデプロイする場合 (例: your-username.github.io/repo-name/) は、
+      # vite.config.js の base オプションを '/repo-name/' に設定する必要があります。
+      # 例: export default defineConfig({ base: '/my-vite-site/' })
+      - name: Build project
+        run: npm run build
+
+      # 5. GitHub Pages用にアーティファクトをアップロード
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3 # 最新バージョンを使用
+        with:
+          # 'dist' ディレクトリからアップロード (Viteのデフォルトビルド出力先)
+          path: './dist'
+
+      # 6. GitHub Pagesにデプロイ
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # 最新バージョンを使用
