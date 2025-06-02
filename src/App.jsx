@@ -1251,6 +1251,19 @@ const App = () => {
 
   const currentSlide = slides[currentPageIndex];
 
+	useEffect(() => {
+		if (currentSlide) {
+			console.log('[App] currentSlide.uploadedTextures:', JSON.stringify(currentSlide.uploadedTextures, null, 2));
+			currentSlide.uploadedTextures.forEach((texture, index) => {
+				console.log(`[App] Texture ${index} ID: ${texture.id}, Name: ${texture.name}, Has dataUrl: ${!!texture.dataUrl}, DataUrl length: ${texture.dataUrl ? texture.dataUrl.length : 'N/A'}`);
+				// dataUrlが長すぎる場合は、最初の数文字だけ表示するなどの工夫もアリ
+				// console.log(`[App] Texture ${index} dataUrl (first 100 chars): ${texture.dataUrl ? texture.dataUrl.substring(0, 100) : 'N/A'}`);
+			});
+		} else {
+			console.log('[App] currentSlide is null or undefined');
+		}
+	}, [currentSlide]); // currentSlideが変更されるたびにログ出力
+
   useEffect(() => {
     const calculateAndSetSizes = () => {
         let availableWidth, availableHeight;
