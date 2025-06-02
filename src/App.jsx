@@ -272,7 +272,7 @@ function createFramebufferWithTexture(gl, width, height, texture) {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
     const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (status !== gl.FRAMEBUFFER_COMPLETE) {
-        console.error('[SlideRenderer createFramebufferWithTexture] Framebuffer not complete:', status);
+        // console.error('[SlideRenderer createFramebufferWithTexture] Framebuffer not complete:', status); // Removed for production
         gl.deleteFramebuffer(fb);
         gl.deleteTexture(texture);
         return null;
@@ -343,52 +343,33 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
   const offscreenCanvasRef = useRef(null);
   const dprRef = useRef(1);
   const loadedUserTexturesRef = useRef({});
-  const [isGlContextReady, setIsGlContextReady] = useState(false); // State to track GL context readiness
+  const [isGlContextReady, setIsGlContextReady] = useState(false);
 
   useEffect(() => {
     dprRef.current = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
     if (!offscreenCanvasRef.current) offscreenCanvasRef.current = document.createElement('canvas');
   }, []);
 
-  // Effect for loading user-uploaded textures
   useEffect(() => {
-    const gl = glRef.current; // Get the latest gl context
-    console.log('[SlideRenderer TexLoadEffect] Triggered. isGlContextReady:', isGlContextReady, 'GL context available:', !!gl, 'GL context lost:', gl ? gl.isContextLost() : 'N/A');
+    const gl = glRef.current;
 
-    if (!isGlContextReady) { // Primary guard: only proceed if GL context is marked as ready
-        console.log('[SlideRenderer TexLoadEffect] isGlContextReady is false. Aborting texture load.');
+    if (!isGlContextReady) {
         return;
     }
-    if (!gl || gl.isContextLost()) { // Secondary guard, should ideally be covered by isGlContextReady
-        console.log('[SlideRenderer TexLoadEffect] GL context not available or lost, even though isGlContextReady is true. Aborting texture load.');
+    if (!gl || gl.isContextLost()) {
         return;
     }
     if (!slideData || !slideData.uploadedTextures) {
-        console.log('[SlideRenderer TexLoadEffect] slideData or slideData.uploadedTextures is not available. Aborting texture load.');
         return;
     }
 
-    console.log('[SlideRenderer TexLoadEffect] slideData.uploadedTextures (raw):', JSON.stringify(slideData.uploadedTextures));
-    console.log(`[SlideRenderer TexLoadEffect] Number of textures in slideData: ${slideData.uploadedTextures.length}`);
-    console.log('[SlideRenderer TexLoadEffect] Current loadedUserTexturesRef.current (before processing):', JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
-
     const currentTextureIdsInSlideData = new Set(slideData.uploadedTextures.map(texture => texture.id));
-    console.log('[SlideRenderer TexLoadEffect] Texture IDs in current slideData:', Array.from(currentTextureIdsInSlideData));
 
-    slideData.uploadedTextures.forEach((texData, index) => {
-      console.log(`[SlideRenderer TexLoadEffect] Processing texture ${index + 1}/${slideData.uploadedTextures.length}: ID: ${texData.id}, Name: ${texData.name}`);
-      const hasDataUrl = !!texData.dataUrl;
-      const dataUrlLength = texData.dataUrl ? texData.dataUrl.length : 'N/A';
-      const isAlreadyLoaded = !!loadedUserTexturesRef.current[texData.id];
-      console.log(`[SlideRenderer TexLoadEffect]   - Has dataUrl: ${hasDataUrl}, DataUrl length: ${dataUrlLength}, Already loaded: ${isAlreadyLoaded}`);
-
+    slideData.uploadedTextures.forEach((texData) => {
       if (texData.dataUrl && !loadedUserTexturesRef.current[texData.id]) {
-        console.log(`[SlideRenderer TexLoadEffect]   -> Attempting to load texture ID: ${texData.id}`);
         const image = new Image();
         image.onload = () => {
-          console.log(`[SlideRenderer TexLoadEffect]   ---> Image.onload SUCCESS for texture ID: ${texData.id}, Name: ${texData.name}`);
-          if (gl.isContextLost()) { // Check context again before using GL
-            console.error(`[SlideRenderer TexLoadEffect]   -----> GL context LOST before creating texture for ID: ${texData.id}`);
+          if (gl.isContextLost()) {
             return;
           }
           try {
@@ -397,57 +378,42 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
             gl.bindTexture(gl.TEXTURE_2D, null);
             loadedUserTexturesRef.current[texData.id] = glTexture;
-            console.log(`[SlideRenderer TexLoadEffect]   -----> WebGL texture CREATED and STORED for ID: ${texData.id}. loadedUserTexturesRef now:`, JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
           } catch (e) {
-            console.error(`[SlideRenderer TexLoadEffect]   -----> ERROR creating WebGL texture for ID: ${texData.id}:`, e);
             onShaderError({ key: 'imageLoadError', params: { fileName: `WebGL texture creation error for ${texData.name}` } });
           }
         };
-        image.onerror = (e) => {
-          console.error(`[SlideRenderer TexLoadEffect]   ---> Image.onerror FAILED for texture ID: ${texData.id}, Name: ${texData.name}`, e);
+        image.onerror = () => {
           onShaderError({ key: 'imageLoadError', params: { fileName: texData.name } });
         }
-        console.log(`[SlideRenderer TexLoadEffect]   -> Setting image.src for texture ID: ${texData.id}. First 100 chars of dataUrl: ${texData.dataUrl ? texData.dataUrl.substring(0, 100) + "..." : "N/A"}`);
         image.src = texData.dataUrl;
-      } else if (!texData.dataUrl) {
-        console.warn(`[SlideRenderer TexLoadEffect]   -> SKIPPING texture ID: ${texData.id} - No dataUrl provided.`);
-      } else if (loadedUserTexturesRef.current[texData.id]) {
-        console.log(`[SlideRenderer TexLoadEffect]   -> SKIPPING texture ID: ${texData.id} - Already loaded.`);
       }
     });
 
     Object.keys(loadedUserTexturesRef.current).forEach(loadedTextureId => {
       if (!currentTextureIdsInSlideData.has(loadedTextureId)) {
-        console.log(`[SlideRenderer TexLoadEffect] Cleaning up unused texture ID: ${loadedTextureId}`);
-        if (!gl.isContextLost()) { // Check context before deleting
+        if (!gl.isContextLost()) {
           gl.deleteTexture(loadedUserTexturesRef.current[loadedTextureId]);
         }
         delete loadedUserTexturesRef.current[loadedTextureId];
-        console.log(`[SlideRenderer TexLoadEffect]   -> Deleted. loadedUserTexturesRef now:`, JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
       }
     });
-    console.log('[SlideRenderer TexLoadEffect] Finished processing textures for this effect run.');
-  }, [slideData?.uploadedTextures, isGlContextReady, onShaderError, t]); // Depends on isGlContextReady and texture data
+  }, [slideData?.uploadedTextures, isGlContextReady, onShaderError, t]);
 
-  // Effect for cleaning up textures on unmount
   useEffect(() => {
     return () => {
       const gl = glRef.current;
       if (gl && !gl.isContextLost()) {
-        console.log('[SlideRenderer CleanupEffect] Component unmounting. Deleting all loaded user textures.');
         Object.values(loadedUserTexturesRef.current).forEach(glTexture => gl.deleteTexture(glTexture));
         loadedUserTexturesRef.current = {};
-        console.log('[SlideRenderer CleanupEffect] All user textures deleted.');
       }
     };
-  }, []); // glRef is stable, so empty array is fine for unmount cleanup.
+  }, []);
 
-  // useCallback for setting up GL context and main framebuffer
   const setupGL = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) { 
       onShaderError({ key: 'canvasNotFound' }); 
-      return false; // Indicate failure
+      return false;
     }
     const currentDpr = dprRef.current;
     const actualWidth = Math.floor(canvasWidth * currentDpr);
@@ -455,27 +421,22 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
 
     if (actualWidth <= 0 || actualHeight <= 0) { 
       onShaderError({ key: 'invalidCanvasDimensions', params: { width: actualWidth, height: actualHeight } }); 
-      return false; // Indicate failure
+      return false;
     }
     canvas.width = actualWidth; canvas.height = actualHeight;
 
     let gl = glRef.current;
     if (!gl || gl.isContextLost()) {
-      console.log('[SlideRenderer setupGL] Attempting to get/re-get WebGL context.');
       gl = canvas.getContext('webgl', { preserveDrawingBuffer: false, antialias: true, premultipliedAlpha: false });
       if (!gl) {
         onShaderError({ key: 'webglNotSupported' });
-        return false; // Indicate failure
+        return false;
       }
       glRef.current = gl;
-      console.log('[SlideRenderer setupGL] WebGL context CREATED/REACQUIRED and set to glRef.current');
-    } else {
-      console.log('[SlideRenderer setupGL] WebGL context already available.');
     }
     
-    // Ensure glRef.current is used from here on, as 'gl' variable might be stale if context was reacquired
     const currentGl = glRef.current; 
-    if (!currentGl) return false; // Should not happen if above logic is correct
+    if (!currentGl) return false;
 
     if (!buffersRef.current.quadBuffer) {
       const quadVertices = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
@@ -504,23 +465,19 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
       const fbInfo = createFramebufferWithTexture(currentGl, actualWidth, actualHeight, sceneTexture);
       if (!fbInfo) { 
         onShaderError({ key: 'framebufferCreateFailed', params: { width: actualWidth, height: actualHeight } }); 
-        return false; // Indicate failure
+        return false;
       }
       framebufferInfoRef.current = {...fbInfo, width: actualWidth, height: actualHeight};
-      console.log('[SlideRenderer setupGL] Framebuffer created/resized.');
     }
-    return true; // Indicate success
+    return true;
   }, [canvasWidth, canvasHeight, onShaderError, t]);
 
-  // useCallback for compiling shaders
   const compileShaders = useCallback(() => {
-    const gl = glRef.current; // Use the ref
+    const gl = glRef.current;
     if (!gl || gl.isContextLost() || !slideData) { 
       onShaderError({ key: 'glContextNotReady' }); 
       return false; 
     }
-    console.log('[SlideRenderer compileShaders] Compiling shaders.');
-    // ... (rest of shader compilation logic remains the same)
     const cleanupProgram = (pInfo) => { if (pInfo?.program) gl.deleteProgram(pInfo.program); };
     cleanupProgram(programsRef.current.backgroundProgram);
     cleanupProgram(programsRef.current.postProcessProgram);
@@ -556,12 +513,10 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
     programsRef.current = newPrograms;
     if (allCompiled) onShaderError(null);
     return allCompiled;
-  }, [slideData, onShaderError, t]); // glRef is not needed here as it's accessed via programsRef.current
+  }, [slideData, onShaderError, t]);
 
-  // useCallback for updating text textures
   const updateTextTexture = useCallback((gl, element, displayScale) => {
     if (!offscreenCanvasRef.current || element.width <= 0 || element.height <= 0) return null;
-    // ... (rest of text texture update logic remains the same)
     const dpr = dprRef.current;
     const scaledDesignWidth = element.width * displayScale;
     const scaledDesignHeight = element.height * displayScale;
@@ -597,10 +552,8 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
     return texInfo.texture;
   }, [isSlideshowMode]);
 
-  // useCallback for the main rendering loop
   const renderScene = useCallback((currentTime) => {
-    const gl = glRef.current; // Use the ref
-    // ... (rest of renderScene logic, ensuring gl is checked before use)
+    const gl = glRef.current;
     if (!gl || gl.isContextLost() || !slideData || !framebufferInfoRef.current || !buffersRef.current.quadBuffer || !buffersRef.current.elementQuadUVBuffer) {
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null; return;
@@ -680,20 +633,11 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
           const baseColor = Array.isArray(element.baseColor) && element.baseColor.length === 4 ? element.baseColor : hexToRgba(element.baseColor || '#FFFFFF', 1.0);
           gl.uniform4fv(elProgInfo.uniforms.u_base_color, baseColor);
 
-          if (element.id === selectedElementId || !selectedElementId) {
-             console.log(`[RenderScene GLSL Shape ${element.id}] Texture Bindings:`, JSON.stringify(element.textureBindings));
-             console.log(`[RenderScene GLSL Shape ${element.id}] loadedUserTexturesRef.current keys:`, JSON.stringify(Object.keys(loadedUserTexturesRef.current)));
-          }
-
           for (let i = 0; i < 3; i++) {
             const uniformName = `u_userTexture${i}`;
             const boundUniformName = `${uniformName}_bound`;
             const textureId = element.textureBindings?.[uniformName];
             const glTexture = textureId ? loadedUserTexturesRef.current[textureId] : null;
-
-            if (element.id === selectedElementId || !selectedElementId) {
-                console.log(`[RenderScene GLSL Shape ${element.id}]   - ${uniformName}: textureId='${textureId}', glTexture available: ${!!glTexture}`);
-            }
 
             if (glTexture && elProgInfo.uniforms[uniformName]) {
               gl.activeTexture(gl.TEXTURE0 + i);
@@ -701,7 +645,6 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
               gl.uniform1i(elProgInfo.uniforms[uniformName], i);
               if (elProgInfo.uniforms[boundUniformName]) {
                 gl.uniform1i(elProgInfo.uniforms[boundUniformName], 1);
-                 if (element.id === selectedElementId || !selectedElementId) console.log(`[RenderScene GLSL Shape ${element.id}]     Set ${boundUniformName} to TRUE (1)`);
               }
             } else {
               gl.activeTexture(gl.TEXTURE0 + i);
@@ -709,7 +652,6 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
               if (elProgInfo.uniforms[uniformName]) gl.uniform1i(elProgInfo.uniforms[uniformName], i);
               if (elProgInfo.uniforms[boundUniformName]) {
                 gl.uniform1i(elProgInfo.uniforms[boundUniformName], 0);
-                if (element.id === selectedElementId || !selectedElementId) console.log(`[RenderScene GLSL Shape ${element.id}]     Set ${boundUniformName} to FALSE (0) because glTexture for '${textureId}' was not found.`);
               }
             }
           }
@@ -770,43 +712,30 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
     animationFrameIdRef.current = requestAnimationFrame(renderScene);
   }, [slideData, canvasWidth, canvasHeight, onShaderError, programsRef, updateTextTexture, loadedUserTexturesRef, selectedElementId, isSlideshowMode, designSlideWidth, designSlideHeight, t, dprRef.current]);
 
-  // Main rendering setup effect
   useEffect(() => {
-    console.log('[SlideRenderer MainRenderEffect] Triggered. Canvas W/H:', canvasWidth, canvasHeight, 'Current isGlContextReady:', isGlContextReady);
     if (canvasWidth > 0 && canvasHeight > 0 && slideData) {
-      if (setupGL()) { // setupGL attempts to initialize glRef.current
-        // After setupGL, check glRef.current directly
+      if (setupGL()) {
         if (glRef.current && !glRef.current.isContextLost()) {
-            if (!isGlContextReady) { // Only set state if it's changing
-                console.log('[SlideRenderer MainRenderEffect] setupGL successful and context valid. Setting isGlContextReady to true.');
+            if (!isGlContextReady) {
                 setIsGlContextReady(true);
-            } else {
-                console.log('[SlideRenderer MainRenderEffect] setupGL successful, context valid, and isGlContextReady is already true.');
             }
-            
-            console.log('[SlideRenderer MainRenderEffect] Proceeding to compile shaders.');
-            if (compileShaders()) { // compileShaders uses glRef.current
-              console.log('[SlideRenderer MainRenderEffect] Shaders compiled successfully. Requesting animation frame.');
+            if (compileShaders()) {
               if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
-              animationFrameIdRef.current = requestAnimationFrame(renderScene); // renderScene uses glRef.current
+              animationFrameIdRef.current = requestAnimationFrame(renderScene);
             } else {
-              console.error('[SlideRenderer MainRenderEffect] Shader compilation FAILED.');
               if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
               animationFrameIdRef.current = null;
             }
         } else {
-            console.error('[SlideRenderer MainRenderEffect] setupGL reported success, but glRef.current is invalid or context lost. Setting isGlContextReady to false.');
-            if (isGlContextReady) setIsGlContextReady(false); 
+            if (isGlContextReady) setIsGlContextReady(false);
         }
-      } else { // setupGL returned false
-        console.error('[SlideRenderer MainRenderEffect] setupGL FAILED. Setting isGlContextReady to false.');
-        if (isGlContextReady) setIsGlContextReady(false); 
+      } else {
+        if (isGlContextReady) setIsGlContextReady(false);
         if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
         animationFrameIdRef.current = null;
       }
     } else {
-      console.log('[SlideRenderer MainRenderEffect] Conditions not met for full setup (canvas size or slideData missing). Setting isGlContextReady to false.');
-      if (isGlContextReady) setIsGlContextReady(false); 
+      if (isGlContextReady) setIsGlContextReady(false);
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
     }
@@ -817,9 +746,8 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
         animationFrameIdRef.current = null;
       }
     };
-  }, [canvasWidth, canvasHeight, slideData, setupGL, compileShaders, renderScene, dprRef, isGlContextReady]); // isGlContextReady added to re-evaluate if it changes
+  }, [canvasWidth, canvasHeight, slideData, setupGL, compileShaders, renderScene, dprRef, isGlContextReady]);
 
-  // Effect for cleaning up text textures when elements change
   useEffect(() => {
     const gl = glRef.current; 
     if (!gl || gl.isContextLost()) return; 
@@ -837,7 +765,7 @@ const SlideRenderer = ({ slideData, canvasWidth, canvasHeight, onShaderError, se
             textTexturesRef.current = {};
         }
     };
-  }, [slideData.elements]); // glRef is not needed as a dependency here because it's stable.
+  }, [slideData.elements]);
 
   return <canvas ref={canvasRef} style={{ display: 'block', position: 'absolute', top: 0, left: 0, zIndex: 0, width: `${canvasWidth}px`, height: `${canvasHeight}px` }} />;
 };
@@ -1281,7 +1209,8 @@ const hexToRgba = (hex, alpha = 1.0) => {
         c= '0x'+c.join(''); return [(c>>16&255)/255, (c>>8&255)/255, (c&255)/255, alpha];
     }
     if (Array.isArray(hex) && hex.length >= 3) { const newAlpha = (hex.length === 4 && typeof hex[3] === 'number') ? hex[3] : alpha; return [hex[0], hex[1], hex[2], newAlpha]; }
-    console.warn('[hexToRgba] Invalid hex color:', hex, 'defaulting to white with alpha', alpha); return [1,1,1,alpha];
+    // console.warn('[hexToRgba] Invalid hex color:', hex, 'defaulting to white with alpha', alpha); // Removed for production
+    return [1,1,1,alpha];
 }
 
 const DESIGN_WIDTH = 1280;
@@ -1388,18 +1317,6 @@ const App = () => {
   };
 
   const currentSlide = slides[currentPageIndex];
-
-  useEffect(() => {
-    if (currentSlide) {
-      console.log('[App currentSlideEffect] currentSlide.uploadedTextures:', JSON.stringify(currentSlide.uploadedTextures, null, 2));
-      currentSlide.uploadedTextures.forEach((texture, index) => {
-        console.log(`[App currentSlideEffect] Texture ${index} ID: ${texture.id}, Name: ${texture.name}, Has dataUrl: ${!!texture.dataUrl}, DataUrl length: ${texture.dataUrl ? texture.dataUrl.length : 'N/A'}`);
-      });
-    } else {
-      console.log('[App currentSlideEffect] currentSlide is null or undefined');
-    }
-  }, [currentSlide]);
-
 
   useEffect(() => {
     const calculateAndSetSizes = () => {
@@ -1810,7 +1727,7 @@ const App = () => {
         setShaderError(t('importSuccess'));
         setHistory([]);
       } catch (error) {
-        console.error("Import error:", error);
+        // console.error("Import error:", error); // Removed for production
         setShaderError(t('importErrorGeneric', { message: error.message }));
       }
     };
