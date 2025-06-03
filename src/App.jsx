@@ -71,6 +71,10 @@ const translations = {
     nothingToUndoNotification: "取り消す操作がありません。",
     nothingToRedoNotification: "やり直す操作がありません。",
     propertiesPanelTitle: "プロパティ",
+    importModeSelectionLabel: "インポート方法:",
+    importModeReplace: "すべてのスライドを置き換える",
+    importModeInsertAfter: "現在のスライドの後に挿入する",
+    importErrorNoSlidesInFile: "インポートファイルに有効なスライドが含まれていません。",
   },
   EN: {
     glslSlides: "GLSL Slides",
@@ -138,6 +142,10 @@ const translations = {
     nothingToUndoNotification: "Nothing to undo.",
     nothingToRedoNotification: "Nothing to redo.",
     propertiesPanelTitle: "Properties",
+    importModeSelectionLabel: "Import Method:",
+    importModeReplace: "Replace all slides",
+    importModeInsertAfter: "Insert after current slide",
+    importErrorNoSlidesInFile: "Imported file contains no valid slides.",
   }
 };
 
@@ -1250,6 +1258,7 @@ const App = () => {
   
   const [history, setHistory] = useState([]); 
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1); 
+  const [importMode, setImportMode] = useState('replace'); // 'replace' or 'insertAfter'
 
   const t = useCallback((key, params = {}) => {
     let langToUse = language; if (!translations[langToUse]) langToUse = 'EN';
@@ -1262,9 +1271,10 @@ const App = () => {
 
   const recordSnapshot = useCallback(() => {
     const snapshot = {
-        slides: JSON.parse(JSON.stringify(slides)),
+        slides: JSON.parse(JSON.stringify(slides)), // Deep copy slides
         currentPageIndex,
         selectedElementId,
+        // importModeも保存する場合はここに追加
     };
 
     setHistory(prevHistory => {
@@ -1291,9 +1301,10 @@ const App = () => {
     const newIndex = currentHistoryIndex - 1;
     const previousState = history[newIndex];
     if (previousState) {
-        setSlides(previousState.slides);
+        setSlides(JSON.parse(JSON.stringify(previousState.slides))); // Deep copy from history
         setCurrentPageIndex(previousState.currentPageIndex);
         setSelectedElementId(previousState.selectedElementId);
+        // previousState.importMode があれば setImportMode(previousState.importMode)
         setCurrentHistoryIndex(newIndex);
         showNotification('undoNotification');
     }
@@ -1307,15 +1318,17 @@ const App = () => {
     const newIndex = currentHistoryIndex + 1;
     const nextState = history[newIndex];
     if (nextState) {
-        setSlides(nextState.slides);
+        setSlides(JSON.parse(JSON.stringify(nextState.slides))); // Deep copy from history
         setCurrentPageIndex(nextState.currentPageIndex);
         setSelectedElementId(nextState.selectedElementId);
+        // nextState.importMode があれば setImportMode(nextState.importMode)
         setCurrentHistoryIndex(newIndex);
         showNotification('redoNotification');
     }
   }, [history, currentHistoryIndex, showNotification]);
 
   useEffect(() => {
+    // 初期スナップショットの記録
     if (slides && slides.length > 0 && history.length === 0 && currentHistoryIndex === -1) {
         const initialSnapshot = {
             slides: JSON.parse(JSON.stringify(slides)),
@@ -1325,10 +1338,11 @@ const App = () => {
         setHistory([initialSnapshot]);
         setCurrentHistoryIndex(0);
     }
-  }, [slides, currentPageIndex, selectedElementId, history, currentHistoryIndex]); 
+  }, []); // 依存配列を空にして初回マウント時のみ実行
+
 
   const goToPage = useCallback((i) => { 
-    if (i >= 0 && i < slides.length && i !== currentPageIndex) { // Only record if page actually changes
+    if (i >= 0 && i < slides.length && i !== currentPageIndex) { 
       recordSnapshot(); 
       setCurrentPageIndex(i); 
       setSelectedElementId(null); 
@@ -1364,9 +1378,9 @@ const App = () => {
   const addPage = useCallback(() => { 
     recordSnapshot(); 
     const newSlide = createNewSlide(); 
-    const newSlides = [...slides]; 
-    newSlides.splice(currentPageIndex + 1, 0, newSlide); 
-    setSlides(newSlides); 
+    const newSlidesArray = [...slides]; 
+    newSlidesArray.splice(currentPageIndex + 1, 0, newSlide); 
+    setSlides(newSlidesArray); 
     setCurrentPageIndex(currentPageIndex + 1); 
     setSelectedElementId(null); 
     setShaderError(""); 
@@ -1374,11 +1388,12 @@ const App = () => {
 
   const deletePage = useCallback(() => { 
     if (slides.length <= 1) { setShaderError(t('cannotDeleteLastPageMessage')); return; } 
+    // カスタム確認ダイアログをここに追加するか、window.confirmの代替手段を検討
     if (window.confirm(t('confirmDeletePageMessage'))) { 
       recordSnapshot(); 
-      const newSlides = slides.filter((_, index) => index !== currentPageIndex); 
-      setSlides(newSlides); 
-      setCurrentPageIndex(prevIndex => Math.max(0, Math.min(prevIndex, newSlides.length - 1))); 
+      const newSlidesArray = slides.filter((_, index) => index !== currentPageIndex); 
+      setSlides(newSlidesArray); 
+      setCurrentPageIndex(prevIndex => Math.max(0, Math.min(prevIndex, newSlidesArray.length - 1))); 
       setSelectedElementId(null); 
       setShaderError(""); 
     } 
@@ -1489,7 +1504,8 @@ const App = () => {
           setSelectedElementId(null);
       } else if (slideWrapperRef.current?.contains(e.target)) {
           const clickedOnElement = currentSlide?.elements.some(elData => {
-              const elDiv = document.querySelector(`[style*="left: ${elData.x * displayScale}px"][style*="top: ${elData.y * displayScale}px"]`); 
+              // DraggableResizableElement の DOM 構造に依存するため、より堅牢な方法を検討する余地あり
+              const elDiv = document.querySelector(`[style*="left: ${elData.x * (slideWrapperSize.width / DESIGN_WIDTH)}px"][style*="top: ${elData.y * (slideWrapperSize.width / DESIGN_WIDTH)}px"]`); 
               return elDiv && elDiv.contains(e.target);
           });
           if (!clickedOnElement) {
@@ -1549,18 +1565,22 @@ const App = () => {
     };
     window.addEventListener('keydown', handleKeyDown); 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElementId, deleteSelectedElement, isSlideshowMode, currentSlide, copiedElement, addElement, showNotification, handleUndo, handleRedo, recordSnapshot]);
+  }, [selectedElementId, deleteSelectedElement, isSlideshowMode, currentSlide, copiedElement, addElement, showNotification, handleUndo, handleRedo]);
 
   const handleExportData = () => { const dataToExport = slides.map(slide => ({ ...slide, uploadedTextures: slide.uploadedTextures.map(texture => ({ id: texture.id, name: texture.name, dataUrl: texture.dataUrl })) })); const jsonString = JSON.stringify(dataToExport, null, 2); const blob = new Blob([jsonString], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; const finalFilename = exportFilename.endsWith('.json') ? exportFilename : `${exportFilename}.json`; a.download = finalFilename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); setShaderError(t('exportSuccess')); };
   
   const handleImportData = (event) => {
     const file = event.target.files[0]; if (!file) { setShaderError(t('importErrorNoFile')); return; }
+    
+    recordSnapshot(); // インポート操作の直前の状態を記録
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const importedData = JSON.parse(e.target.result); if (!Array.isArray(importedData)) throw new Error(t('importErrorNotArray'));
+        const importedRawData = JSON.parse(e.target.result); 
+        if (!Array.isArray(importedRawData)) throw new Error(t('importErrorNotArray'));
         
-        const validatedSlides = importedData.map(slide => ({
+        const validatedImportedSlides = importedRawData.map(slide => ({
           id: slide.id || `imported_slide_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
           backgroundShader: slide.backgroundShader || { fs: DEFAULT_BACKGROUND_FS },
           postProcessShader: slide.postProcessShader || { fs: DEFAULT_POST_PROCESS_FS },
@@ -1580,24 +1600,40 @@ const App = () => {
           })),
           uploadedTextures: (slide.uploadedTextures || []).map(texture => ({ id: texture.id || `imported_tex_${Date.now()}_${Math.random().toString(36).substr(2,5)}`, name: texture.name || 'Unnamed Imported Texture', dataUrl: texture.dataUrl || null })),
         }));
-        
-        const newSlidesState = validatedSlides.length > 0 ? validatedSlides : [createNewSlide()];
-        setSlides(newSlidesState);
-        setCurrentPageIndex(0); 
-        setSelectedElementId(null); 
-        
-        const importSnapshot = {
-            slides: JSON.parse(JSON.stringify(newSlidesState)),
-            currentPageIndex: 0,
-            selectedElementId: null,
-        };
-        setHistory([importSnapshot]);
-        setCurrentHistoryIndex(0);
-        setShaderError(t('importSuccess'));
 
-      } catch (error) { setShaderError(t('importErrorGeneric', { message: error.message })); }
+        if (validatedImportedSlides.length === 0) {
+            setShaderError(t('importErrorNoSlidesInFile'));
+            // インポート失敗時はアンドゥで元の状態に戻せるように、ここでは履歴を操作しない
+            return;
+        }
+        
+        let newSlidesArray;
+        let newPageIndex = 0;
+
+        if (importMode === 'insertAfter') {
+          newSlidesArray = [...slides]; // 現在のスライドをコピー
+          newSlidesArray.splice(currentPageIndex + 1, 0, ...validatedImportedSlides); // 現在のページの次に挿入
+          newPageIndex = currentPageIndex + 1; // 挿入された最初のスライドに移動 (オプション)
+        } else { // 'replace' mode (default)
+          newSlidesArray = validatedImportedSlides.length > 0 ? validatedImportedSlides : [createNewSlide()];
+          newPageIndex = 0;
+        }
+        
+        setSlides(newSlidesArray);
+        setCurrentPageIndex(newPageIndex); 
+        setSelectedElementId(null); 
+        setShaderError(t('importSuccess'));
+        // インポート成功後、新しい状態が recordSnapshot によって次の操作時に記録される
+
+      } catch (error) { 
+          setShaderError(t('importErrorGeneric', { message: error.message })); 
+          // エラー発生時、アンドゥで戻せるように履歴は操作しない
+      }
     };
-    reader.onerror = () => { setShaderError(t('importFileReadError')); }
+    reader.onerror = () => { 
+        setShaderError(t('importFileReadError')); 
+        // エラー発生時、アンドゥで戻せるように履歴は操作しない
+    }
     reader.readAsText(file); if (importFileRef.current) importFileRef.current.value = "";
   };
 
@@ -1623,11 +1659,26 @@ const App = () => {
             <label htmlFor="exportFilenameInput" style={{fontSize: '0.9em', color: '#c0c0c0', display: 'block', marginBottom: '5px'}}>{t('exportFilenameLabel')}</label>
             <input type="text" id="exportFilenameInput" value={exportFilename} onChange={(e) => setExportFilename(e.target.value)} placeholder={t('defaultExportFilename')} style={{width: 'calc(100% - 12px)', padding: '8px', borderRadius: '4px', border: '1px solid #4f5357', background: '#33363a', color: '#ccc', boxSizing: 'border-box'}}/>
         </div>
-        <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '15px'}}>
+        <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '5px'}}> {/* Reduced margin */}
             <button onClick={handleExportData} style={{...btnStyle, flexGrow: 1, marginRight: '5px', background: 'linear-gradient(145deg, #6c757d, #5a6268)'}} onMouseOver={e=>{e.currentTarget.style.background='linear-gradient(145deg, #7a8288, #686e74)';e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}} onMouseOut={e=>{e.currentTarget.style.background='linear-gradient(145deg, #6c757d, #5a6268)';e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}>{t('exportData')}</button>
             <input type="file" ref={importFileRef} onChange={handleImportData} accept=".json" style={{ display: 'none' }} />
             <button onClick={() => importFileRef.current && importFileRef.current.click()} style={{...btnStyle, flexGrow: 1, marginLeft: '5px', background: 'linear-gradient(145deg, #17a2b8, #138496)'}} onMouseOver={e=>{e.currentTarget.style.background='linear-gradient(145deg, #19b1c9, #159aaf)';e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}} onMouseOut={e=>{e.currentTarget.style.background='linear-gradient(145deg, #17a2b8, #138496)';e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}>{t('importData')}</button>
         </div>
+        {/* Import Mode Selection UI */}
+        <div style={{ marginBottom: '15px', marginTop: '10px', padding: '10px', background: '#33363a', borderRadius: '6px', border: '1px solid #2c2c2c' }}>
+            <label style={{ fontSize: '0.9em', color: '#c0c0c0', display: 'block', marginBottom: '8px' }}>{t('importModeSelectionLabel')}</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '0.85em' }}>
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input type="radio" name="importMode" value="replace" checked={importMode === 'replace'} onChange={(e) => setImportMode(e.target.value)} style={{ marginRight: '8px', accentColor: '#58a6ff' }} />
+                    {t('importModeReplace')}
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input type="radio" name="importMode" value="insertAfter" checked={importMode === 'insertAfter'} onChange={(e) => setImportMode(e.target.value)} style={{ marginRight: '8px', accentColor: '#58a6ff' }} />
+                    {t('importModeInsertAfter')}
+                </label>
+            </div>
+        </div>
+
         <button onClick={() => setIsSlideshowMode(true)} style={{...btnStyle, width:'100%', marginBottom:'20px', padding:'10px 0', fontSize:'1em', background: 'linear-gradient(145deg, #28a745, #218838)'}} onMouseOver={e=>{e.currentTarget.style.background='linear-gradient(145deg, #2db950, #249740)';e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}} onMouseOut={e=>{e.currentTarget.style.background='linear-gradient(145deg, #28a745, #218838)';e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}>{t('startSlideshow')}</button>
         <div style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #3c3f41', display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
             <button onClick={()=>goToPage(currentPageIndex-1)} disabled={currentPageIndex===0} style={{...btnStyle, opacity:currentPageIndex===0?0.5:1}} onMouseOver={e=>{if(currentPageIndex!==0){e.currentTarget.style.background=hoverStyle.background;e.currentTarget.style.boxShadow=hoverStyle.boxShadow;}}} onMouseOut={e=>{e.currentTarget.style.background=btnStyle.background;e.currentTarget.style.boxShadow=btnStyle.boxShadow;}}>{t('previousPage')}</button>
